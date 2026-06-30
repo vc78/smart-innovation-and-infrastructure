@@ -39,10 +39,10 @@ const easeOutExpo = (t: number) => {
 
 export default function KpiCounters({
   items = [
-    { label: "Projects Completed", value: 500, suffix: "+" },
-    { label: "Happy Clients", value: 1000, suffix: "+" },
-    { label: "Verified Contractors", value: 200, suffix: "+" },
-    { label: "Satisfaction Rate", value: 98, suffix: "%" },
+    { label: "Projects Completed", value: 12, suffix: "+" },
+    { label: "Happy Clients", value: 8, suffix: "+" },
+    { label: "Verified Contractors", value: 25, suffix: "+" },
+    { label: "Satisfaction Rate", value: 96, suffix: "%" },
   ],
 }: { items?: Kpi[] }) {
   const { ref, inView } = useInViewOnce<HTMLDivElement>()

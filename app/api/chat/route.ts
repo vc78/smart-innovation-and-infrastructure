@@ -37,14 +37,15 @@ export async function POST(req: Request) {
     // Create providers
     const openai = createOpenAI({
       apiKey: process.env.OPENAI_API_KEY || "",
-      compatibility: "strict",
     })
 
     const google = createGoogleGenerativeAI({
       apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
     })
 
-    const rawModel = typeof body?.model === "string" && body.model.length > 0 ? body.model : "openai/gpt-4o-mini"
+    // Default to Gemini if OpenAI key is not configured
+    const defaultModel = process.env.OPENAI_API_KEY ? "openai/gpt-4o-mini" : "google/gemini-1.5-flash"
+    const rawModel = typeof body?.model === "string" && body.model.length > 0 ? body.model : defaultModel
     
     let requestedModel;
     if (rawModel.startsWith("google/")) {
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
       const modelName = rawModel.replace("openai/", "")
       requestedModel = openai(modelName)
     }
+
 
     const enableWeb = Boolean(body?.enableWeb)
     const sync = Boolean(body?.sync)
@@ -99,12 +101,12 @@ You are a senior-level construction professional with expertise in:
 - Civil, structural, MEP, and fit-out construction
 - Project planning and scheduling (Primavera P6, MS Project)
 - Contract administration (FIDIC, NEC3/4, JCT, RERA, UAE Construction Law)
-- Cost management and quantity surveying
+- Cost management and quantity surveying (powered by the SIID Material & Cost Reference Dataset)
 - HSE (OSHA, ISO 45001, local regulations)
 - Quality management (ISO 9001, QA/QC plans)
 - BIM concepts (ISO 19650, Revit/Navisworks familiarity)
 
-Always respond as a trusted, experienced professional — not as a generic assistant.
+Always respond as a trusted, experienced professional — not as a generic assistant. You have access to real-time regional material prices for Telangana and Andhra Pradesh via the SIID dataset.
 
 ---
 
@@ -270,10 +272,10 @@ ${enableWeb ? "You may use the searchConstruction tool for current market data."
     if (messages.length === 0) {
       return Response.json(
         {
-          text: `Hello! I am your Senior Construction Project Management AI Assistant. I can assist you across all phases of construction, including:
+          text: `Hello! I am your Advanced Project Management Assistant. I can assist you across all phases of construction, including:
 
 • **Project Planning & Scheduling** (WBS, Critical Path, Primavera P6 concepts)
-• **Cost Management & Estimation** (BOQ, EVM, Valuation)
+• **Cost Management & Estimation** (BOQ, EVM, Regional Material Costs)
 • **Contract Administration** (FIDIC, EOT claims, Letters)
 • **HSE & Quality Management** (RAMS, ITPs, NCRs)
 • **Site Operations & Handover**

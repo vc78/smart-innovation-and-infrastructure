@@ -18,6 +18,7 @@ export default function BlogPage() {
       title: "10 Tips for Planning Your Dream Home",
       excerpt: "Essential considerations before starting your home design project, from budget to lifestyle needs.",
       author: "Sarah Johnson",
+      authorRole: "Lead Architect",
       date: "Jan 15, 2025",
       category: "Design Tips",
       image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80",
@@ -29,6 +30,7 @@ export default function BlogPage() {
       title: "Neural Architecture: How AI is Reshaping Spaces",
       excerpt: "Beyond floor plans—how generative AI is creating hyper-personalized living environments that adapt to human emotion.",
       author: "Michael Chen",
+      authorRole: "AI Research Lead",
       date: "Jan 10, 2025",
       category: "Technology",
       image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80",
@@ -39,6 +41,7 @@ export default function BlogPage() {
       title: "The Future of Smart Cities: 2025 and Beyond",
       excerpt: "How construction intelligence is paving the way for integrated, self-sustaining urban ecosystems.",
       author: "Priya Sharma",
+      authorRole: "Urban Planner",
       date: "Jan 5, 2025",
       category: "Sustainability",
       image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80",
@@ -49,6 +52,7 @@ export default function BlogPage() {
       title: "Sustainable Building Materials for the Next Decade",
       excerpt: "From mushroom bricks to transparent wood—exploring the cutting-edge of eco-friendly construction.",
       author: "David Kumar",
+      authorRole: "Material Scientist",
       date: "Dec 28, 2024",
       category: "Sustainability",
       image: "https://images.unsplash.com/photo-1518005020250-68594b8152e0?auto=format&fit=crop&q=80",
@@ -59,6 +63,7 @@ export default function BlogPage() {
       title: "Zero-Carbon Concrete: The Holy Grail of Building",
       excerpt: "How structural engineers are finally solving the cement industry's massive carbon footprint.",
       author: "Lisa Anderson",
+      authorRole: "Structural Engineer",
       date: "Dec 20, 2024",
       category: "Engineering",
       image: "https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&q=80",
@@ -69,6 +74,7 @@ export default function BlogPage() {
       title: "Quantum Simulations in Structural Stress Testing",
       excerpt: "A deep dive into how quantum computing is making skyscrapers safer than ever before.",
       author: "Raj Patel",
+      authorRole: "Computational Physicist",
       date: "Dec 15, 2024",
       category: "Technology",
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
@@ -136,10 +142,13 @@ export default function BlogPage() {
                       </p>
                       <div className="flex items-center gap-6 pt-6 border-t border-white/10">
                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs uppercase border border-white/20">
-                               {featuredPost.author.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <span className="text-sm font-bold">{featuredPost.author}</span>
+                             <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs uppercase border border-white/20 flex-shrink-0">
+                                {featuredPost.author.split(' ').map(n => n[0]).join('')}
+                             </div>
+                             <div className="flex flex-col">
+                                <span className="text-sm font-bold">{featuredPost.author}</span>
+                                <span className="text-xs text-slate-400">{featuredPost.authorRole}</span>
+                             </div>
                          </div>
                          <div className="flex items-center gap-2 text-slate-400 text-sm">
                             <Calendar className="w-4 h-4" />
@@ -161,16 +170,23 @@ export default function BlogPage() {
                 <p className="text-lg opacity-80 leading-relaxed">
                    Join 5,000+ architects and homeowners receiving our weekly intelligence digest.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <form 
+                   action="https://mailchimp.com" 
+                   method="POST" 
+                   target="_blank"
+                   className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+                >
                    <input 
                       type="email" 
+                      name="EMAIL"
                       placeholder="Enter your email" 
+                      required
                       className="flex-1 h-14 rounded-2xl px-6 bg-white/10 border border-white/20 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 text-white" 
                    />
-                   <Button size="lg" className="h-14 px-8 rounded-2xl bg-white text-primary hover:bg-slate-100 font-black">
+                   <Button type="submit" size="lg" className="h-14 px-8 rounded-2xl bg-white text-primary hover:bg-slate-100 font-black">
                       Subscribe Now
                    </Button>
-                </div>
+                </form>
              </div>
           </div>
         </div>

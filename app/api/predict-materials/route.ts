@@ -56,13 +56,26 @@ export async function POST(req: Request) {
     const aggCft = builtupArea * ratios.aggregate_per_sqft_builtup
     const waterLiters = cementBags * ratios.water_per_bag_cement
 
+    const REGIONAL_RATES: Record<string, number> = {
+      Hyderabad: 1.0,
+      Vijayawada: 0.92,
+      Warangal: 0.88,
+      Secunderabad: 1.0,
+    };
+    const GST_RATE = 0.18;
+    const SITE_DEV_PERCENT = 0.05;
+
     // 3. Cost Calculation (Hyderabad Baseline Adjusted by City/Soil/Foundation)
-    const cityIdx = city_index[city as keyof typeof city_index] || 1.0
+    const cityIdx = REGIONAL_RATES[city] || city_index[city as keyof typeof city_index] || 1.0;
     const foundMult = mappings.foundation[foundation as keyof typeof mappings.foundation] || 1.0
     const soilMult = mappings.soil[soil as keyof typeof mappings.soil] || 1.0
     
     const baseRate = tier_rates[tier as keyof typeof tier_rates] || 1850
-    const totalCost = builtupArea * baseRate * cityIdx * foundMult * soilMult
+    const rawTotalCost = builtupArea * baseRate * cityIdx * foundMult * soilMult
+    
+    const siteDevCost = rawTotalCost * SITE_DEV_PERCENT;
+    const gstCost = (rawTotalCost + siteDevCost) * GST_RATE;
+    const totalCost = rawTotalCost + siteDevCost + gstCost;
 
     // 4. Detailed Material Costs
     const cp = unit_prices.cement_bag[tier as keyof typeof unit_prices.cement_bag] * cityIdx
@@ -86,6 +99,9 @@ export async function POST(req: Request) {
         bricks: Math.ceil(bricksCount * bp),
         sand: Math.ceil(sandCft * sdp),
         aggregate: Math.ceil(aggCft * ap),
+        site_development: Math.ceil(siteDevCost),
+        gst: Math.ceil(gstCost),
+        base_construction: Math.ceil(rawTotalCost),
       },
       ml_metadata: {
         algorithm: "CPWD-DSR-2024-Calibrated-Engine",

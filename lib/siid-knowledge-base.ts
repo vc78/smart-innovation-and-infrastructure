@@ -1,5 +1,6 @@
 // SIID Knowledge Base - Trained Q&A for the AI Assistant
 // Contains comprehensive answers about SIID platform, construction, and architecture
+import { MATERIAL_DATASET } from "@/lib/material-dataset"
 
 export interface KnowledgeEntry {
   keywords: string[]
@@ -22,6 +23,21 @@ export interface QAPair {
 }
 
 export const SIID_KNOWLEDGE_BASE: KnowledgeEntry[] = [
+  {
+    keywords: ["is code", "indian standard", "is 456", "bis", "standards", "codes"],
+    question: "What Indian Standard (IS) codes are used in construction?",
+    answer: `Key Indian Standard (IS) codes for civil engineering and construction:
+• IS 456 (2000): Plain and Reinforced Concrete
+• IS 800 (2007): General Construction in Steel
+• IS 1893 (Part 1, 2016): Earthquake Resistant Design of Structures
+• IS 875 (Parts 1-5): Design Loads (Dead, Live, Wind, Snow, Special Loads)
+• IS 383 (2016): Coarse and Fine Aggregate for Concrete
+• IS 1786 (2008): High Strength Deformed Steel Bars (TMT)
+• IS 269 (2015): Ordinary Portland Cement (OPC)
+• IS 10262 (2019): Concrete Mix Proportioning
+Our AI automatically ensures all structural designs comply with these IS codes based on your location and seismic zone.`,
+    category: "technical",
+  },
   // Project Management & Planning
   {
     keywords: ["wbs", "work breakdown structure", "schedule", "p6", "planning", "critical path"],

@@ -371,8 +371,7 @@ export default function LandingPage() {
             </Card>
           </div>
 
-          {/* Secondary Features Grid */}
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-4 border-border/60 hover-lift group cursor-pointer">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -507,7 +506,7 @@ export default function LandingPage() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">Trusted by Industry Leaders</h2>
             <p className="text-sm sm:text-base text-muted-foreground">Certified and recognized for excellence</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             <Card className="p-4 sm:p-6 flex flex-col items-center justify-center text-center hover-lift">
               <Award className="w-10 sm:w-12 h-10 sm:h-12 text-primary mb-2 sm:mb-3" />
               <h4 className="font-semibold text-sm sm:text-base mb-1">ISO Certified</h4>
@@ -582,7 +581,7 @@ export default function LandingPage() {
             <p className="text-lg text-muted-foreground">Streamlined workflow for construction professionals</p>
           </div>
 
-          <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 1
@@ -729,7 +728,7 @@ export default function LandingPage() {
         </div>
 
         <div className="container relative z-10 mx-auto px-4">
-          <div className="grid md:grid-cols-5 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">

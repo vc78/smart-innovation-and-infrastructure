@@ -11,6 +11,8 @@ export default function CareersPage() {
       location: "Bangalore, India",
       type: "Full-time",
       description: "Build the future of architectural design with cutting-edge AI and web technologies.",
+      status: "Actively Hiring",
+      postedAt: "June 15, 2026",
     },
     {
       title: "Product Designer",
@@ -18,6 +20,8 @@ export default function CareersPage() {
       location: "Remote",
       type: "Full-time",
       description: "Create beautiful, intuitive experiences that empower users to design their dreams.",
+      status: "Reviewing Applications",
+      postedAt: "June 10, 2026",
     },
     {
       title: "AI/ML Engineer",
@@ -25,6 +29,8 @@ export default function CareersPage() {
       location: "Bangalore, India",
       type: "Full-time",
       description: "Develop and improve our AI-powered design generation algorithms.",
+      status: "Actively Hiring",
+      postedAt: "May 28, 2026",
     },
     {
       title: "Customer Success Manager",
@@ -32,6 +38,8 @@ export default function CareersPage() {
       location: "Mumbai, India",
       type: "Full-time",
       description: "Help our customers succeed and build lasting relationships.",
+      status: "Position Filled",
+      postedAt: "May 15, 2026",
     },
   ]
 
@@ -85,12 +93,17 @@ export default function CareersPage() {
             <h2 className="text-3xl font-bold mb-8">Open Positions</h2>
             <div className="space-y-4">
               {openings.map((job, index) => (
-                <Card key={index} className="p-6 hover-lift cursor-pointer">
+                <Card key={index} className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold">{job.title}</h3>
+                        <span className={`px-2 py-1 text-xs rounded-full ${job.status === 'Actively Hiring' ? 'bg-green-100 text-green-700' : job.status === 'Position Filled' ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-700'}`}>
+                          {job.status}
+                        </span>
+                      </div>
                       <p className="text-sm text-muted-foreground mb-3">{job.description}</p>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Briefcase className="w-4 h-4" />
                           {job.department}
@@ -103,9 +116,22 @@ export default function CareersPage() {
                           <Clock className="w-4 h-4" />
                           {job.type}
                         </div>
+                        <div className="flex items-center gap-1 text-xs opacity-75">
+                          Posted: {job.postedAt}
+                        </div>
                       </div>
                     </div>
-                    <Button className="bg-accent hover:bg-accent-dark text-white">Apply Now</Button>
+                    <Button 
+                      className="bg-accent hover:bg-accent-dark text-white"
+                      disabled={job.status === "Position Filled"}
+                      asChild={job.status !== "Position Filled"}
+                    >
+                      {job.status === "Position Filled" ? (
+                        <span>Closed</span>
+                      ) : (
+                        <a href={`mailto:careers@siid.com?subject=Application for ${job.title}`}>Apply Now</a>
+                      )}
+                    </Button>
                   </div>
                 </Card>
               ))}

@@ -72,6 +72,8 @@ const trendingTopics = ["Smart Materials 2024", "Smart Floor Plans", "Green Cert
 type ViewMode = "grid" | "list"
 type SortOption = "relevance" | "recent" | "popular"
 
+import { INSIGHTS } from "@/lib/insights-data"
+
 export function InsightsSearch() {
   const [qInput, setQInput] = useState("")
   const [q, setQ] = useState("")
@@ -86,46 +88,29 @@ export function InsightsSearch() {
   const [filterByBookmarks, setFilterByBookmarks] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(false)
 
-  const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const fetcher = async (url: string, body: any) => {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    })
-    return res.json()
-  }
+  const executeSearch = useCallback(
+    (query: string) => {
+      setIsLoading(true)
+      setQ(query)
+      setQInput(query)
+      if (query && !searchHistory.includes(query)) {
+        setSearchHistory((prev) => [query, ...prev.slice(0, 9)])
+      }
+      setShowHistory(false)
+      setTimeout(() => setIsLoading(false), 300) // Simulate network delay
+    },
+    [searchHistory]
+  )
 
-  const mutate = async () => {
-    if (!q.trim()) {
-      setData(null)
-      return
-    }
-    setIsLoading(true)
-    try {
-      const result = await fetcher("/api/search", { q, limit: 20 })
-      setData(result)
-    } catch (error) {
-      console.error("Search failed:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    mutate()
-  }, [q])
-
-  useEffect(() => {
-    if (!autoRefresh) return
-    const interval = setInterval(mutate, 30000)
-    return () => clearInterval(interval)
-  }, [autoRefresh, q])
-
-  const ok = data?.ok
-  const rawResults: Array<{ title: string; link: string; snippet: string }> = ok ? (data?.results ?? []) : []
+  const rawResults = useMemo(() => {
+    if (!q.trim()) return INSIGHTS;
+    return INSIGHTS.filter(item => 
+      item.title.toLowerCase().includes(q.toLowerCase()) || 
+      item.tags.some(t => t.toLowerCase().includes(q.toLowerCase()))
+    );
+  }, [q]);
 
   const filteredResults = useMemo(() => {
     let results = rawResults
@@ -207,17 +192,7 @@ export function InsightsSearch() {
     }
   }, [])
 
-  const executeSearch = useCallback(
-    (query: string) => {
-      setQ(query)
-      setQInput(query)
-      if (query && !searchHistory.includes(query)) {
-        setSearchHistory((prev) => [query, ...prev.slice(0, 9)])
-      }
-      setShowHistory(false)
-    },
-    [searchHistory],
-  )
+
 
   const toggleBookmark = useCallback((link: string) => {
     setBookmarks((prev) => (prev.includes(link) ? prev.filter((l) => l !== link) : [...prev, link]))

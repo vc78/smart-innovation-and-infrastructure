@@ -44,32 +44,43 @@ export default function AboutPage() {
           </div>
         </div>
 
+const REAL_METRICS = {
+  projectsInitiated:     24,    
+  verifiedContractors:   32,    
+  satisfactionRate:      96,    
+  surveySampleSize:      18,    
+  yearsOperating:        1,     
+};
+
+const ACTIVE_CITIES = ['Hyderabad', 'Vijayawada', 'Warangal', 'Secunderabad'];
+const EXPANSION_TARGET = { citiesBy2027: 15, region: 'South India' };
+
         {/* ECOSYSTEM GRID: THE FOUR PILLARS */}
         <section className="container mx-auto px-4 mb-32">
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 { 
                   icon: <Cpu className="w-8 h-8" />, 
-                  title: "Neural Estimation", 
-                  desc: "Proprietary ML weights analyze local market fluctuations in real-time to provide ±3% cost accuracy.",
+                  title: "Parametric Estimation", 
+                  desc: "City-specific material and labor rates updated quarterly. Includes GST, approvals, and site development.",
                   color: "bg-blue-500/10 text-blue-600"
                 },
                 { 
                   icon: <Globe className="w-8 h-8" />, 
-                  title: "Geo-Vetted Network", 
-                  desc: "A strictly curated ecosystem of the top 5% contractors in every region, verified by performance data.",
+                  title: "Verified Network", 
+                  desc: `${REAL_METRICS.verifiedContractors}+ contractors across ${ACTIVE_CITIES.length} cities, vetted through identity, GST, portfolio, and references.`,
                   color: "bg-emerald-500/10 text-emerald-600"
                 },
                 { 
                   icon: <Zap className="w-8 h-8" />, 
-                  title: "Vector Synthesis", 
-                  desc: "Our layout engine generates architectural vectors that are compliant with both Vastu and building codes.",
+                  title: "Vastu-Aware Layouts", 
+                  desc: "Design generation considers standard Vastu Shastra principles as a soft guide for room placement and orientation.",
                   color: "bg-amber-500/10 text-amber-600"
                 },
                 { 
                   icon: <Shield className="w-8 h-8" />, 
-                  title: "Dossier Security", 
-                  desc: "Hyper-encrypted project blueprints and legal manifests stored on the decentralized construction ledger.",
+                  title: "Secure Project Data", 
+                  desc: "Secure cloud-hosted project data with role-based access for seamless team collaboration.",
                   color: "bg-primary/10 text-primary"
                 }
               ].map((pillar, i) => (
@@ -93,19 +104,19 @@ export default function AboutPage() {
               <div className="grid md:grid-cols-2 gap-16 items-center relative z-10">
                  <div className="space-y-8">
                     <div className="space-y-4">
-                       <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">Decentralizing <br /> Design Dreams</h2>
+                       <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">Our Progress So Far</h2>
                        <p className="text-slate-400 text-lg leading-relaxed">
-                          The construction industry has been broken for decades. Opacity, middlemen, and inefficiency have made building dreams a nightmare. 
+                          SIID is in its growth phase, actively onboarding architecture teams and contractors across Telangana and Andhra Pradesh. We're committed to making construction transparent and intelligent.
                        </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="space-y-2">
-                          <h4 className="text-3xl font-black text-primary tracking-tighter">98%</h4>
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Customer Trust Rate</p>
+                          <h4 className="text-3xl font-black text-primary tracking-tighter">{REAL_METRICS.satisfactionRate}%</h4>
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Satisfaction ({REAL_METRICS.surveySampleSize} surveys)</p>
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-3xl font-black text-primary tracking-tighter">₹500Cr+</h4>
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Projects Optimized</p>
+                          <h4 className="text-3xl font-black text-primary tracking-tighter">{ACTIVE_CITIES.length}</h4>
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Cities</p>
                        </div>
                     </div>
                  </div>
@@ -130,10 +141,10 @@ export default function AboutPage() {
         <section className="container mx-auto px-4 mb-32">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                { label: "Neural Designs", value: "12,400+", icon: <Rocket className="w-5 h-5" /> },
-                { label: "Active Cities", value: "48", icon: <Globe className="w-5 h-5" /> },
-                { label: "Vetted Builders", value: "850+", icon: <Briefcase className="w-5 h-5" /> },
-                { label: "Growth Rate", value: "215%", icon: <TrendingUp className="w-5 h-5" /> }
+                { label: "Projects Initiated", value: `${REAL_METRICS.projectsInitiated}+`, icon: <Rocket className="w-5 h-5" /> },
+                { label: "Active Cities", value: `${ACTIVE_CITIES.length}`, icon: <Globe className="w-5 h-5" /> },
+                { label: "Verified Contractors", value: `${REAL_METRICS.verifiedContractors}+`, icon: <Briefcase className="w-5 h-5" /> },
+                { label: `Goal: ${EXPANSION_TARGET.region}`, value: `${EXPANSION_TARGET.citiesBy2027} Cities`, icon: <TrendingUp className="w-5 h-5" /> }
               ].map((stat, i) => (
                 <div key={i} className="space-y-2 group cursor-default">
                    <div className="mx-auto p-3 bg-muted rounded-full w-fit group-hover:bg-primary/10 group-hover:text-primary transition-all duration-300">

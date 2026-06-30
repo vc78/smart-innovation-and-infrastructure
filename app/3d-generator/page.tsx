@@ -6,6 +6,8 @@ import { ThreeDModelInputForm } from "@/components/3d-model-input-form"
 import { ThreeDModelViewer } from "@/components/3d-model-viewer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Cable as Cube,
   Maximize2,
@@ -20,10 +22,31 @@ import {
 export default function ThreeDGeneratorPage() {
   const [buildingInputs, setBuildingInputs] = useState<BuildingInputs | null>(null)
   const [showViewer, setShowViewer] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        router.push("/login?redirect=/3d-generator")
+      } else {
+        setIsAuthorized(true)
+      }
+    }
+  }, [router])
 
   const handleGenerate = (inputs: BuildingInputs) => {
     setBuildingInputs(inputs)
     setShowViewer(true)
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="container mx-auto py-24 flex justify-center items-center">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -37,7 +60,7 @@ export default function ThreeDGeneratorPage() {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight"> 3D Model Generator</h1>
             <p className="text-base md:text-lg text-muted-foreground">
-              Generate professional 3D building models with automatic camera animations
+              Preview your building envelope in basic 3D
             </p>
           </div>
         </div>
@@ -204,7 +227,7 @@ export default function ThreeDGeneratorPage() {
       <Card>
         <CardHeader>
           <CardTitle>Technology Stack</CardTitle>
-          <CardDescription>This 3D generator is powered by industry-standard tools</CardDescription>
+          <CardDescription>This 3D visualization uses basic Three.js shapes</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
@@ -222,7 +245,7 @@ export default function ThreeDGeneratorPage() {
           <div className="space-y-1">
             <h4 className="font-semibold">WebGL</h4>
             <p className="text-sm text-muted-foreground">
-              Hardware-accelerated graphics API for smooth, high-performance 3D visualization
+              Browser-based 3D rendering for structural layout visualization.
             </p>
           </div>
         </CardContent>

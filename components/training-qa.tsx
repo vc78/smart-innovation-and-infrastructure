@@ -282,6 +282,7 @@ const QA_DATABASE: QAItem[] = [
 
     // Additional Technical (236-300)
     { id: 236, category: "Technical", question: "What is modular construction?", answer: "Building with prefabricated units assembled on-site; faster, less waste." },
+    { id: 261, category: "Technical", question: "What Indian Standard (IS) codes are used in construction?", answer: "Key IS codes: IS 456 (Concrete), IS 800 (Steel), IS 1893 (Earthquake), IS 875 (Loads), IS 383 (Aggregates), IS 1786 (TMT Bars), IS 269 (OPC), IS 10262 (Mix Proportioning)." },
     { id: 237, category: "Technical", question: "What is formwork?", answer: "Temporary structure supporting concrete during curing; removed when concrete hardens." },
     { id: 238, category: "Technical", question: "What is false ceiling?", answer: "Secondary ceiling below main structure; hides utilities and improves aesthetics." },
     { id: 239, category: "Technical", question: "What is partition wall?", answer: "Non-load-bearing wall dividing interior spaces; can be easily moved." },

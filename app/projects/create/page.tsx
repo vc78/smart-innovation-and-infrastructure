@@ -54,7 +54,7 @@ export default function CreateProjectWorkflow() {
 
   const [budget, setBudget] = useState({
     grade: "standard", min: "5000000", max: "8000000",
-    cement: "OPC 43", steel: "TMT Fe415",
+    cement: "OPC 43", steel: "TMT Fe415", bricks: "red",
     estimatedStream: "", estimatedComplete: false
   })
 
@@ -163,7 +163,8 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
           floors: floors,
           qualityLevel: budget.grade,
           city: plot.city,
-          soilType: plot.soil
+          soilType: plot.soil,
+          brickType: budget.bricks
         })
       })
       
@@ -618,7 +619,7 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
                          </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                          <div className="space-y-3">
                            <Label className="font-semibold">Core Cement Profiling</Label>
                            <select className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={budget.cement} onChange={e => setBudget({...budget, cement: e.target.value})}>
@@ -629,6 +630,12 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
                            <Label className="font-semibold">Structural Steel Grp</Label>
                            <select className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={budget.steel} onChange={e => setBudget({...budget, steel: e.target.value})}>
                               <option>TMT Fe415</option><option>TMT Fe500 (Preferred)</option><option>Fe550 (High Rise)</option>
+                           </select>
+                         </div>
+                         <div className="space-y-3">
+                           <Label className="font-semibold">Brick Type</Label>
+                           <select className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={budget.bricks} onChange={e => setBudget({...budget, bricks: e.target.value})}>
+                              <option value="red">Red Clay Bricks</option><option value="flyash">Flyash Bricks</option><option value="aac">AAC Blocks</option>
                            </select>
                          </div>
                       </div>

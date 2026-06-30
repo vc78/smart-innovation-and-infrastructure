@@ -13,54 +13,54 @@ export default function HelpPage() {
 
   const faqs = [
     {
-      category: "Getting Started",
+      category: "Service Areas & Scope",
       questions: [
         {
-          q: "How do I create my first project?",
-          a: "Click 'New Project' from your dashboard, select your project type, and follow the step-by-step wizard to input your requirements. Our AI will generate comprehensive designs based on your inputs.",
+          q: "Where does SIID currently operate?",
+          a: "We are currently active in 4 major cities across Telangana and Andhra Pradesh: Hyderabad, Vijayawada, Warangal, and Secunderabad. We are actively expanding to other regions in South India.",
         },
         {
-          q: "What information do I need to provide?",
-          a: "You'll need basic details like project type, size, budget range, location, and any specific requirements or preferences. The more details you provide, the better our AI can tailor the designs.",
+          q: "What types of projects do you handle?",
+          a: "We specialize in residential and commercial construction, from single-family homes to mid-rise commercial spaces. Our AI tools are optimized for Indian building codes and Vastu Shastra principles.",
         },
       ],
     },
     {
-      category: "Design & Planning",
+      category: "Estimates & Pricing",
       questions: [
         {
-          q: "Can I modify the AI-generated designs?",
-          a: "Yes! All designs are fully customizable. You can adjust dimensions, change materials, modify layouts, and tweak any aspect using our intuitive editor.",
+          q: "How accurate is the Budget Estimator?",
+          a: "Our parametric estimator uses city-specific material and labor rates updated quarterly. It is typically accurate within ±5% for the base construction. However, custom finishes and site-specific challenges can alter the final cost.",
         },
         {
-          q: "How accurate are the budget estimates?",
-          a: "Our estimates are based on current market rates and include materials, labor, and contingency. Actual costs may vary based on your location and specific contractor rates.",
+          q: "Are there any hidden fees or platform charges?",
+          a: "No hidden fees. SIID charges a transparent project management fee (typically 2-3% of the project value) if you choose to execute the project through our verified contractor network. Using our AI design generation and estimation tools is completely free.",
         },
       ],
     },
     {
-      category: "Contractors",
+      category: "Contractors & Execution",
       questions: [
         {
-          q: "How are contractors verified?",
-          a: "All contractors undergo a thorough verification process including license checks, portfolio review, and customer feedback analysis before joining our platform.",
+          q: "How do you verify contractors?",
+          a: "Every contractor on our platform undergoes a rigorous 4-step vetting process: Identity & GST verification, financial health check, portfolio review, and physical site inspections of their previous work.",
         },
         {
-          q: "Can I hire multiple contractors?",
-          a: "Yes, you can connect with and hire different contractors for different aspects of your project (e.g., one for construction, another for electrical work).",
+          q: "Can I use my own contractor with your designs?",
+          a: "Absolutely. Our platform generates construction-ready blueprints and bills of quantities that you can hand over to any contractor of your choice.",
         },
       ],
     },
     {
-      category: "Billing & Payments",
+      category: "Timelines & Delivery",
       questions: [
         {
-          q: "What payment methods do you accept?",
-          a: "We accept all major credit cards, debit cards, UPI, and bank transfers. Payment terms with contractors are negotiated directly between you and them.",
+          q: "How long does a typical project take?",
+          a: "A standard 2,000 sq ft residential build typically takes 6-8 months from foundation to handover. Our estimator provides a projected timeline based on your specific built-up area and structural complexity.",
         },
         {
-          q: "Is there a subscription fee?",
-          a: "SIID offers both free and premium plans. The free plan includes basic design generation, while premium plans offer advanced features and unlimited projects.",
+          q: "Do you handle government approvals?",
+          a: "While our designs are code-compliant, the physical approval process (liaison work) is typically handled by the local contractor. We provide all the necessary technical drawings required for submission.",
         },
       ],
     },

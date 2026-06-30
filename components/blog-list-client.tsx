@@ -13,6 +13,7 @@ type Post = {
     title: string
     excerpt: string
     author: string
+    authorRole?: string
     date: string
     category: string
     image?: string
@@ -100,11 +101,12 @@ export default function BlogListClient({ posts }: { posts: Post[] }) {
 
                             <div className="pt-6 mt-auto border-t border-border flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold border border-primary/20">
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold border border-primary/20 flex-shrink-0">
                                         {post.author.split(' ').map(n => n[0]).join('')}
                                     </div>
-                                    <div>
+                                    <div className="flex flex-col">
                                         <p className="text-xs font-bold">{post.author}</p>
+                                        <p className="text-[9px] text-muted-foreground font-semibold">{post.authorRole}</p>
                                         <p className="text-[10px] text-muted-foreground">{post.date}</p>
                                     </div>
                                 </div>

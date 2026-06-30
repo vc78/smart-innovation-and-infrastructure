@@ -30,28 +30,7 @@ export default function ContactPage() {
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    const form = e.currentTarget
-    const formData = new FormData(form)
-    const name = String(formData.get("name") || "")
-    const email = String(formData.get("email") || "")
-    const subject = String(formData.get("subject") || "")
-    const message = String(formData.get("message") || "")
-
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    // WhatsApp share to owner number
-    const waText = encodeURIComponent(
-      `New website inquiry:\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`,
-    )
-    window.open(`https://wa.me/9032306961?text=${waText}`, "_blank")
-
-    toast({ title: "Message Sent!", description: "We shared your message via WhatsApp." })
-    setLoading(false)
-    form.reset()
-  }
+  // WhatsApp handler removed in favor of Formspree
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +101,7 @@ export default function ContactPage() {
 
           <Card className="p-8">
             <h2 className="text-2xl font-bold mb-6">Send us a Message</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form action="https://formspree.io/f/mrbglrzk" method="POST" className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-2">
@@ -162,9 +141,8 @@ export default function ContactPage() {
                 type="submit"
                 size="lg"
                 className="w-full bg-accent hover:bg-accent-dark text-white"
-                disabled={loading}
               >
-                {loading ? "Sending..." : "Send Message"}
+                Send Message
                 <Send className="ml-2 w-4 h-4" />
               </Button>
             </form>

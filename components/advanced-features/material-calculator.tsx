@@ -238,7 +238,7 @@ export function MaterialCalculator() {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">AI Material Estimator</h2>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">Deep Learning · Hyderabad Market Rates v2.4</p>
+            <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">Market Rates Updated: June 2026</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ export function MaterialCalculator() {
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
-              <Field label="City / Region"><Input value={city} onChange={setCity} type="text" /></Field>
+              <Field label="City / Region"><Select value={city} onChange={setCity} options={["Hyderabad", "Vijayawada", "Warangal", "Secunderabad"]} /></Field>
               <Field label="Total Floors"><Input value={floors} onChange={setFloors} /></Field>
               <Field label="Vastu Direction"><Select value={direction} onChange={setDirection} options={DIRECTIONS} /></Field>
             </div>
