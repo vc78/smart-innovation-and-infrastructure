@@ -191,6 +191,70 @@ const DEFAULT_PHASES: TimelinePhase[] = [
   },
 ]
 
+const parseDurationWeeks = (duration: string): number => {
+  const match = duration.match(/(\d+)(?:-(\d+))?\s*weeks?/i)
+  if (!match) return 1
+  return match[2] ? parseInt(match[2], 10) : parseInt(match[1], 10)
+}
+
+const computeCriticalPath = (allPhases: TimelinePhase[]): Set<string> => {
+  if (allPhases.length === 0) return new Set<string>()
+  const byId = new Map(allPhases.map((p) => [p.id, p]))
+  const memo = new Map<string, number>()
+
+  const longestPathTo = (id: string): number => {
+    if (memo.has(id)) return memo.get(id)!
+    const phase = byId.get(id)
+    if (!phase) return 0
+    const own = parseDurationWeeks(phase.duration)
+    const deps = phase.dependencies || []
+    const upstream = deps.length ? Math.max(...deps.map(longestPathTo)) : 0
+    const total = own + upstream
+    memo.set(id, total)
+    return total
+  }
+
+  allPhases.forEach((p) => longestPathTo(p.id))
+
+  const endPhase = allPhases.reduce((a, b) => (memo.get(a.id)! >= memo.get(b.id)! ? a : b))
+  const critical = new Set<string>()
+  let cursor: TimelinePhase | undefined = endPhase
+  while (cursor) {
+    critical.add(cursor.id)
+    const deps = cursor.dependencies || []
+    if (!deps.length) break
+    cursor = byId.get(deps.reduce((a, b) => (memo.get(a)! >= memo.get(b)! ? a : b)))
+  }
+  return critical
+}
+
+const topologicalDepth = (phases: TimelinePhase[]): Map<string, number> => {
+  const byId = new Map(phases.map((p) => [p.id, p]))
+  const memo = new Map<string, number>()
+  const depthOf = (id: string): number => {
+    if (memo.has(id)) return memo.get(id)!
+    const phase = byId.get(id)
+    const deps = phase?.dependencies || []
+    const d = deps.length ? Math.max(...deps.map(depthOf)) + 1 : 0
+    memo.set(id, d)
+    return d
+  }
+  phases.forEach((p) => depthOf(p.id))
+  return memo
+}
+
+const weatherRiskWeight: Record<NonNullable<TimelinePhase["weatherRisk"]>, number> = {
+  None: 0, Low: 1, Moderate: 2, High: 3, Severe: 4,
+}
+
+const calculatePhaseRiskScore = (phase: TimelinePhase): number => {
+  const weather = phase.weatherRisk ? weatherRiskWeight[phase.weatherRisk] : 0
+  const changeReq = Math.min(phase.changeRequests || 0, 5)
+  const materialDelays = (phase.materialsTracking || []).filter((m) => m.status === "Delayed").length
+  const qualityPenalty = phase.qualityScore !== undefined ? (100 - phase.qualityScore) / 20 : 0
+  return weather + changeReq + materialDelays * 2 + qualityPenalty
+}
+
 export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPhases?: TimelinePhase[] }) {
   const { language } = useLanguage()
   const t = useTranslation(language)
@@ -205,6 +269,28 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isPredicting, setIsPredicting] = useState(false)
 
+  useEffect(() => {
+    const criticalIds = computeCriticalPath(phases)
+    const now = Date.now()
+    setPhases((prev) =>
+      prev.map((p) => {
+        const isCritical = criticalIds.has(p.id)
+        let newStatus = p.status
+        if (p.status !== "completed" && p.endDate) {
+          const isLate = new Date(p.endDate).getTime() < now
+          if (isLate && p.status !== "delayed") {
+            newStatus = "delayed"
+          }
+        }
+        if (p.isCriticalPath !== isCritical || p.status !== newStatus) {
+          return { ...p, isCriticalPath: isCritical, status: newStatus }
+        }
+        return p
+      })
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phases.map((p) => `${p.id}:${p.duration}:${(p.dependencies || []).join(",")}:${p.endDate}:${p.status}`).join("|")])
+
   // Smart Feature: Predict Schedule Risks 
   const predictScheduleRisks = async () => {
     setIsPredicting(true)
@@ -217,6 +303,7 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
       if (!res.ok) throw new Error("Failed to predict risks")
 
       const result = await res.json()
+      if (!Array.isArray(result.enhanced_phases)) throw new Error("Invalid API response format")
       setPhases(result.enhanced_phases)
       toast({
         title: "Smart Risk Scan Complete",
@@ -231,8 +318,13 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
 
   // Feature 1: Calculate overall project progress
   const calculateOverallProgress = () => {
-    const totalProgress = phases.reduce((sum, phase) => sum + phase.progress, 0)
-    return Math.round(totalProgress / phases.length)
+    const totalWeight = phases.reduce((sum, p) => sum + (p.budget || parseDurationWeeks(p.duration)), 0)
+    if (totalWeight === 0) return 0
+    const weighted = phases.reduce(
+      (sum, p) => sum + p.progress * (p.budget || parseDurationWeeks(p.duration)),
+      0
+    )
+    return Math.round(weighted / totalWeight)
   }
 
   // Feature 2: Calculate budget variance
@@ -244,12 +336,18 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
 
   // Feature 3: Detect delays
   const detectDelays = () => {
-    return phases.filter((phase) => phase.status === "delayed").length
+    const now = Date.now()
+    return phases.filter((phase) => {
+      if (phase.status === "completed") return false
+      if (!phase.endDate) return false
+      return new Date(phase.endDate).getTime() < now
+    }).length
   }
 
   // Feature 4: Critical path analysis
   const getCriticalPath = () => {
-    return phases.filter((phase) => phase.status === "in-progress" || phase.status === "upcoming")
+    const criticalIds = computeCriticalPath(phases)
+    return phases.filter((phase) => criticalIds.has(phase.id))
   }
 
   // Feature 5: Export to PDF
@@ -264,6 +362,7 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
         "Progress": `${phase.progress}%`,
         "Status": phase.status,
         "Budget": phase.budget ? `₹${phase.budget.toLocaleString()}` : "N/A",
+        "Actual Cost": phase.actualCost ? `₹${phase.actualCost.toLocaleString()}` : "N/A",
       }))
 
       const pdf = await generateProfessionalDocument({
@@ -280,7 +379,7 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
           }
         ],
         data: phaseData,
-        columns: ["Phase Name", "Duration", "Progress", "Status", "Budget"],
+        columns: ["Phase Name", "Duration", "Progress", "Status", "Budget", "Actual Cost"],
         footerText: `Timeline Report | Overall Progress: ${overallProgress}%`,
       })
 
@@ -302,7 +401,8 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
 
   // Feature 6: Export to JSON
   const exportToJSON = () => {
-    const dataStr = JSON.stringify(phases, null, 2)
+    const dataToExport = phases.map(({ isCriticalPath, ...rest }) => rest)
+    const dataStr = JSON.stringify(dataToExport, null, 2)
     const dataBlob = new Blob([dataStr], { type: "application/json" })
     const url = URL.createObjectURL(dataBlob)
     const link = document.createElement("a")
@@ -320,12 +420,19 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
   const duplicatePhase = (phaseId: string) => {
     const phaseToDuplicate = phases.find((p) => p.id === phaseId)
     if (phaseToDuplicate) {
-      const newPhase = {
+      const newId = `${Date.now()}`
+      const newPhase: TimelinePhase = {
         ...phaseToDuplicate,
-        id: `${Date.now()}`,
+        id: newId,
         name: `${phaseToDuplicate.name} (Copy)`,
-        status: "upcoming" as const,
+        status: "upcoming",
         progress: 0,
+        tasks: phaseToDuplicate.tasks.map((t, i) => ({
+          ...t,
+          id: `${newId}-${i}`,
+          completed: false,
+        })),
+        dependencies: [],
       }
       setPhases([...phases, newPhase])
       toast({
@@ -355,11 +462,18 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
           const completedCount = updatedTasks.filter((t) => t.completed).length
           const newProgress = Math.round((completedCount / updatedTasks.length) * 100)
 
+          const newStatus =
+            newProgress === 100
+              ? "completed"
+              : phase.status === "completed"
+              ? "in-progress"
+              : phase.status
+
           return {
             ...phase,
             tasks: updatedTasks,
             progress: newProgress,
-            status: newProgress === 100 ? "completed" : phase.status,
+            status: newStatus,
           }
         }
         return phase
@@ -397,23 +511,26 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
 
   // Feature 12: Filter phases
   const filteredPhases = phases.filter((phase) => {
-    const matchesSearch = phase.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = phase.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
     const matchesFilter = filterStatus === "all" || phase.status === filterStatus
     return matchesSearch && matchesFilter
   })
 
   // Feature 13: Sort phases by date
-  const sortedPhases = [...filteredPhases].sort((a, b) => {
-    if (!a.startDate || !b.startDate) return 0
-    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-  })
+  const sortedPhases = (() => {
+    const depths = topologicalDepth(filteredPhases)
+    return [...filteredPhases].sort((a, b) => {
+      const depthDiff = (depths.get(a.id) ?? 0) - (depths.get(b.id) ?? 0)
+      if (depthDiff !== 0) return depthDiff
+      if (!a.startDate || !b.startDate) return 0
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    })
+  })()
 
   // Feature 14: Calculate days remaining
-  const getDaysRemaining = (endDate?: string) => {
-    if (!endDate) return null
-    const end = new Date(endDate)
-    const now = new Date()
-    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const getDaysRemaining = (phase: TimelinePhase) => {
+    if (!phase.endDate || phase.status === "completed") return null
+    const diff = Math.ceil((new Date(phase.endDate).getTime() - Date.now()) / 86400000)
     return diff
   }
 
@@ -472,7 +589,14 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
             {isPredicting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BrainCircuit className="w-4 h-4 mr-2" />}
             Analyze Risks (AI)
           </Button>
-          <Button variant="outline" size="sm" className="bg-blue-500/5 hover:bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400">
+          <Button variant="outline" size="sm" onClick={() => {
+            if (phases.length === 0) return
+            const ranked = [...phases].sort((a, b) => calculatePhaseRiskScore(b) - calculatePhaseRiskScore(a))
+            toast({
+              title: "Optimization Suggestion",
+              description: `Highest-risk phase: ${ranked[0]?.name ?? "none"} (score ${calculatePhaseRiskScore(ranked[0]).toFixed(1)})`,
+            })
+          }} className="bg-blue-500/5 hover:bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400">
             <Zap className="w-4 h-4 mr-2" />
             Auto-Optimize
           </Button>
@@ -483,10 +607,6 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
           <Button variant="outline" size="sm" onClick={exportToPDF}>
             <Download className="w-4 h-4 mr-2" />
             Export PDF
-          </Button>
-          <Button variant="outline" size="sm" className="hidden sm:flex">
-            <LinkIcon className="w-4 h-4 mr-2" />
-            Blockchain Audit
           </Button>
           <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -571,7 +691,7 @@ export function EnhancedTimeline({ initialPhases = DEFAULT_PHASES }: { initialPh
       {/* Timeline phases - Feature 22: Enhanced phase cards with all data */}
       <div className="space-y-4">
         {sortedPhases.map((phase, index) => {
-          const daysRemaining = getDaysRemaining(phase.endDate)
+          const daysRemaining = getDaysRemaining(phase)
 
           return (
             <div key={phase.id}>

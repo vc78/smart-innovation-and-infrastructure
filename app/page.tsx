@@ -191,7 +191,7 @@ export default function LandingPage() {
           />
         )}
         <div className="relative z-10 container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
+          <div className="w-full max-w-3xl">
             <div className="animate-slide-up">
               <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 text-white border border-white/20 backdrop-blur-md text-sm font-medium mb-6 drop-shadow-md">
                 <Sparkles className="w-4 h-4 text-accent" />
@@ -230,34 +230,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <Card className="glass-effect elevation-lg p-6 md:p-8 border border-border/70 bg-background/70 animate-scale-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-                <div className="rounded-lg p-3 sm:p-4 outline-primary bg-background/60">
-                  <div className="text-xl sm:text-2xl font-bold text-primary mb-1">3x</div>
-                  <div className="text-xs text-muted-foreground">Faster Design Cycles</div>
-                </div>
-                <div className="rounded-lg p-3 sm:p-4 outline-accent bg-background/60">
-                  <div className="text-xl sm:text-2xl font-bold text-accent mb-1">40%</div>
-                  <div className="text-xs text-muted-foreground">Cost Reduction</div>
-                </div>
-                <div className="rounded-lg p-3 sm:p-4 outline-primary bg-background/60">
-                  <div className="text-xl sm:text-2xl font-bold text-primary mb-1">500+</div>
-                  <div className="text-xs text-muted-foreground">Active Design Teams</div>
-                </div>
-                <div className="rounded-lg p-3 sm:p-4 outline-accent bg-background/60">
-                  <div className="text-xl sm:text-2xl font-bold text-accent mb-1">99%</div>
-                  <div className="text-xs text-muted-foreground">Accurate Work</div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Button asChild className="w-full">
-                  <Link href="/training">
-                    Learn Smart Construction
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </Card>
           </div>
         </div>
       </section>
