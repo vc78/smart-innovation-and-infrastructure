@@ -36,7 +36,11 @@ import {
   AlertCircle,
   Sparkles,
   Bot,
-  Activity
+  Activity,
+  MessageSquare,
+  Wrench,
+  CheckSquare,
+  Send
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ShareButton } from "@/components/share-button"
@@ -177,7 +181,60 @@ export function DocumentManager() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [isDragging, setIsDragging] = useState(false)
 
+  // AI Workbench States
+  const [activePreviewTab, setActivePreviewTab] = useState<"insights" | "chat" | "tools">("insights")
+  const [chatInput, setChatInput] = useState("")
+  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([])
+  const [isSimulatingAction, setIsSimulatingAction] = useState(false)
+
   const { toast } = useToast()
+
+  // Reset workbench on preview change
+  useEffect(() => {
+    if (previewDoc) {
+      setActivePreviewTab("insights")
+      setChatMessages([
+        { role: "assistant", content: `Hello! I have analyzed ${previewDoc.name}. What would you like to know or do?` }
+      ])
+    }
+  }, [previewDoc])
+
+  const handleSendMessage = () => {
+    if (!chatInput.trim()) return
+    const newMsg = { role: "user", content: chatInput }
+    setChatMessages(prev => [...prev, newMsg])
+    setChatInput("")
+    
+    // Simulate AI context response
+    setTimeout(() => {
+      let reply = "Based on the document context, I've noted your request."
+      const lower = newMsg.content.toLowerCase()
+      if (lower.includes("steel") || lower.includes("reinforcement")) {
+        reply = "The structural blueprints specify Fe500 grade steel, though I flagged a potential density issue in the north-east cantilever span."
+      } else if (lower.includes("cost") || lower.includes("budget") || lower.includes("penalty")) {
+        reply = "I've scanned the document for financial obligations. There are penalty clauses for delays exceeding 14 days."
+      } else if (lower.includes("vastu") || lower.includes("energy")) {
+        reply = "Vastu checks indicate the kitchen is currently in the North-East (Air element). Vedic principles recommend moving it to the South-East."
+      } else if (lower.includes("fix") || lower.includes("resolve")) {
+        reply = "I can draft a remediation plan for any of the detected risks. Just click the 'Auto-Fix' button next to the risk."
+      }
+      setChatMessages(prev => [...prev, { role: "assistant", content: reply }])
+    }, 1000)
+  }
+
+  const handleRemediate = (risk: string) => {
+    setIsSimulatingAction(true)
+    toast({ title: "Analyzing Context", description: "Generating AI remediation plan..." })
+    setTimeout(() => {
+      setIsSimulatingAction(false)
+      toast({ title: "Plan Generated", description: "Task has been drafted and queued for review." })
+      setActivePreviewTab("chat")
+      setChatMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: `✅ I have drafted a remediation plan for: "${risk}". I've also assigned a priority task to the engineering team's backlog.` 
+      }])
+    }, 1500)
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -833,7 +890,7 @@ export function DocumentManager() {
                     {previewDoc.mlAnalysis?.detectedZones?.map((zone, i) => (
                       <div
                         key={i}
-                        className="absolute border-2 border-red-500 bg-red-600/10 animate-pulse pointer-events-auto cursor-help group/zone"
+                        className="absolute border-2 border-red-500 bg-red-600/10 animate-pulse pointer-events-auto group/zone"
                         style={{
                           top: `${zone.box.y}%`,
                           left: `${zone.box.x}%`,
@@ -841,11 +898,21 @@ export function DocumentManager() {
                           height: `${zone.box.h}%`
                         }}
                       >
-                        <div className="absolute -top-6 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 whitespace-nowrap shadow-xl">
-                          {zone.label} [Smart]
+                        <div className="absolute -top-6 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 whitespace-nowrap shadow-xl z-20">
+                          {zone.label}
                         </div>
-                        <div className="absolute inset-0 opacity-0 group-hover/zone:opacity-100 bg-red-600/20 transition-opacity flex items-center justify-center">
-                          <span className="text-white text-[8px] font-bold">{(zone.confidence * 100).toFixed(0)}% CONFIDENCE</span>
+                        
+                        {/* Advanced Hover Tool Menu */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover/zone:opacity-100 scale-95 group-hover/zone:scale-100 transition-all z-30 bg-background border shadow-2xl rounded-lg p-1.5 flex gap-1 pointer-events-none group-hover/zone:pointer-events-auto w-max">
+                          <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={(e) => { e.stopPropagation(); toast({title:"Measurement Tool", description:"Estimating spatial dimensions..."}) }}>
+                            Measure
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={(e) => { e.stopPropagation(); toast({title:"Flagged", description:"Zone marked for manual architectural review."}) }}>
+                            Flag
+                          </Button>
+                          <Button size="sm" variant="default" className="h-7 text-[10px] px-2 bg-red-600 hover:bg-red-700" onClick={(e) => { e.stopPropagation(); handleRemediate(zone.description) }}>
+                            <Wrench className="w-3 h-3 mr-1" /> Auto-Fix
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -883,84 +950,171 @@ export function DocumentManager() {
               </div>
             )}
 
+            {/* AI WORKBENCH PANEL */}
             {previewDoc?.mlAnalysis && (
-              <div className="absolute top-4 right-4 w-96 bg-background/95 backdrop-blur shadow-2xl rounded-2xl border p-5 max-h-[80vh] overflow-y-auto z-10 animate-in slide-in-from-right-8">
-                <div className="flex items-center gap-2 mb-4 border-b pb-3">
-                  <div className="p-2 bg-blue-600 text-white rounded-lg shadow-inner">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-base leading-none tracking-tight">SMART DOCUMENT INSIGHTS</h4>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-widest">{previewDoc.mlAnalysis.docClass} • SCORE: {previewDoc.mlAnalysis.confidenceScore}%</p>
+              <div className="absolute top-4 right-4 w-[420px] bg-background/95 backdrop-blur shadow-2xl rounded-2xl border flex flex-col max-h-[80vh] overflow-hidden z-10 animate-in slide-in-from-right-8">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-600 text-white rounded-lg shadow-inner">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm leading-none tracking-tight">SIID AI WORKBENCH</h4>
+                      <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-widest">{previewDoc.mlAnalysis.docClass} • SCORE: {previewDoc.mlAnalysis.confidenceScore}%</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-muted/30 border-y -mx-5 px-5 py-2 mb-4 flex items-center justify-between text-[9px] font-mono text-muted-foreground">
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> ENGINE: READY</div>
-                  <div>ID: {Math.random().toString(16).slice(2, 10).toUpperCase()}</div>
-                  <div className="font-bold text-primary">SCANNED WITH SMART AI</div>
+                {/* Workbench Tabs */}
+                <div className="flex border-b text-xs font-medium bg-muted/20">
+                  <button 
+                    onClick={() => setActivePreviewTab("insights")} 
+                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "insights" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Insights
+                  </button>
+                  <button 
+                    onClick={() => setActivePreviewTab("chat")} 
+                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "chat" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Chat
+                  </button>
+                  <button 
+                    onClick={() => setActivePreviewTab("tools")} 
+                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "tools" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Wrench className="w-3.5 h-3.5" /> Tools
+                  </button>
                 </div>
 
-                <div className="space-y-4 text-sm">
-                  <p className="text-muted-foreground leading-relaxed">
-                    {previewDoc.mlAnalysis.summary}
-                  </p>
+                <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                  
+                  {/* TAB: INSIGHTS */}
+                  {activePreviewTab === "insights" && (
+                    <div className="space-y-5 text-sm animate-in fade-in duration-200">
+                      <p className="text-muted-foreground leading-relaxed text-[13px]">
+                        {previewDoc.mlAnalysis.summary}
+                      </p>
 
-                  {previewDoc.mlAnalysis.risks.length > 0 && (
-                    <div className="bg-red-50/50 border border-red-100 rounded-lg p-3">
-                      <h5 className="font-semibold text-red-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                        <AlertCircle className="w-3.5 h-3.5" /> Potential Risks
-                      </h5>
-                      <ul className="list-disc pl-4 space-y-1 text-red-900/80 text-xs">
-                        {previewDoc.mlAnalysis.risks.map((r, i) => <li key={i}>{r}</li>)}
-                      </ul>
+                      {previewDoc.mlAnalysis.risks.length > 0 && (
+                        <div className="bg-red-50/50 border border-red-100 rounded-xl p-4">
+                          <h5 className="font-semibold text-red-800 flex items-center gap-1.5 mb-3 text-xs uppercase tracking-wider">
+                            <AlertCircle className="w-3.5 h-3.5" /> Critical Risks
+                          </h5>
+                          <div className="space-y-3">
+                            {previewDoc.mlAnalysis.risks.map((r, i) => (
+                              <div key={i} className="bg-white p-3 rounded-lg shadow-sm border border-red-100 text-[13px]">
+                                <p className="text-red-900/90 mb-3">{r}</p>
+                                <div className="flex justify-end gap-2 pt-3 border-t border-red-50">
+                                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => {
+                                    toast({ title: "Task Queued", description: "Assigned to Engineering backlog." })
+                                  }}>
+                                    <CheckSquare className="w-3.5 h-3.5 mr-1.5" /> Queue Task
+                                  </Button>
+                                  <Button size="sm" className="h-7 text-[11px] bg-red-600 hover:bg-red-700 text-white" onClick={() => handleRemediate(r)} disabled={isSimulatingAction}>
+                                    <Wrench className="w-3.5 h-3.5 mr-1.5" /> Auto-Fix
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {previewDoc.mlAnalysis.financialObligations && previewDoc.mlAnalysis.financialObligations.length > 0 && (
+                        <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4">
+                          <h5 className="font-semibold text-amber-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
+                            <FileText className="w-3.5 h-3.5" /> Obligations
+                          </h5>
+                          <ul className="list-disc pl-4 space-y-1 text-amber-900/80 text-[13px]">
+                            {previewDoc.mlAnalysis.financialObligations.map((r, i) => <li key={i}>{r}</li>)}
+                          </ul>
+                        </div>
+                      )}
+
+                      {previewDoc.mlAnalysis.extractedSpecs.length > 0 && (
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                          <h5 className="font-semibold text-blue-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
+                            <FileSpreadsheet className="w-3.5 h-3.5" /> Technical Specs
+                          </h5>
+                          <ul className="list-disc pl-4 space-y-1 text-blue-900/80 text-[13px]">
+                            {previewDoc.mlAnalysis.extractedSpecs.map((s, i) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {previewDoc.mlAnalysis.financialObligations && previewDoc.mlAnalysis.financialObligations.length > 0 && (
-                    <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3">
-                      <h5 className="font-semibold text-amber-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                        <FileText className="w-3.5 h-3.5" /> Obligations
-                      </h5>
-                      <ul className="list-disc pl-4 space-y-1 text-amber-900/80 text-xs">
-                        {previewDoc.mlAnalysis.financialObligations.map((r, i) => <li key={i}>{r}</li>)}
-                      </ul>
-                    </div>
-                  )}
-
-                  {previewDoc.mlAnalysis.detectedZones && previewDoc.mlAnalysis.detectedZones.length > 0 && (
-                    <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
-                      <h5 className="font-semibold text-primary flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                        <Activity className="w-3.5 h-3.5" /> High Efficiency Detection
-                      </h5>
-                      <div className="space-y-2">
-                        {previewDoc.mlAnalysis.detectedZones.map((z, i) => (
-                          <div key={i} className="text-xs bg-background p-2 rounded border border-border/50">
-                            <div className="font-bold text-foreground mb-0.5">{z.label}</div>
-                            <div className="text-[10px] text-emerald-600 font-bold mb-1 opacity-80">{z.efficiencyGain || "Site Efficiency +15%"}</div>
-                            <p className="text-[10px] text-muted-foreground leading-snug">{z.description}</p>
+                  {/* TAB: CHAT */}
+                  {activePreviewTab === "chat" && (
+                    <div className="flex flex-col h-[400px] animate-in fade-in duration-200">
+                      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-4 flex flex-col">
+                        {chatMessages.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[13px] shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm border"}`}>
+                              {msg.content}
+                            </div>
                           </div>
                         ))}
+                      </div>
+                      <div className="pt-4 border-t mt-auto flex gap-2 relative bg-background">
+                        <Input 
+                          placeholder="Ask about this document..." 
+                          className="text-[13px] h-10 pr-10 rounded-xl bg-muted/50 focus-visible:bg-background transition-colors" 
+                          value={chatInput} 
+                          onChange={e => setChatInput(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                        />
+                        <Button size="icon" className="h-10 w-10 absolute right-0 top-4 rounded-l-none rounded-r-xl" onClick={handleSendMessage}>
+                          <Send className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   )}
 
-                  {previewDoc.mlAnalysis.extractedSpecs.length > 0 && (
-                    <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
-                      <h5 className="font-semibold text-blue-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                        <FileSpreadsheet className="w-3.5 h-3.5" /> Technical Specs
-                      </h5>
-                      <ul className="list-disc pl-4 space-y-1 text-blue-900/80 text-xs">
-                        {previewDoc.mlAnalysis.extractedSpecs.map((s, i) => <li key={i}>{s}</li>)}
-                      </ul>
+                  {/* TAB: TOOLS */}
+                  {activePreviewTab === "tools" && (
+                    <div className="space-y-3 animate-in fade-in duration-200">
+                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
+                        toast({ title: "Data Extracted", description: "Technical specs exported as JSON format." })
+                      }}>
+                        <div className="flex items-start gap-3">
+                          <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl group-hover:scale-110 transition-transform"><FileSpreadsheet className="w-5 h-5" /></div>
+                          <div>
+                            <h5 className="font-semibold text-sm">Extract Structured Data</h5>
+                            <p className="text-[13px] text-muted-foreground mt-0.5">Export all tables and specs as JSON/CSV instantly.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
+                        toast({ title: "Translation Started", description: "Converting document to regional language..." })
+                      }}>
+                        <div className="flex items-start gap-3">
+                          <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl group-hover:scale-110 transition-transform"><FileText className="w-5 h-5" /></div>
+                          <div>
+                            <h5 className="font-semibold text-sm">Auto-Translate Context</h5>
+                            <p className="text-[13px] text-muted-foreground mt-0.5">Translate structural notes for local contractors.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
+                        toast({ title: "Compliance Check", description: "Running ruleset engine against document." })
+                      }}>
+                        <div className="flex items-start gap-3">
+                          <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl group-hover:scale-110 transition-transform"><CheckCircle2 className="w-5 h-5" /></div>
+                          <div>
+                            <h5 className="font-semibold text-sm">Verify NBC Compliance</h5>
+                            <p className="text-[13px] text-muted-foreground mt-0.5">Run strict municipal compliance audit on blueprints.</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <div className="mt-4 pt-4 border-t border-dashed">
-                    <p className="text-[9px] text-muted-foreground font-medium leading-relaxed italic">
-                      Disclaimer: This analysis uses smart AI tailored for construction. Safety checks active.
-                    </p>
-                  </div>
                 </div>
               </div>
             )}

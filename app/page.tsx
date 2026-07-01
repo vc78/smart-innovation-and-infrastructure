@@ -59,7 +59,7 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false)
 
   const heroVideos = [
-    "/images/ext1.mp4",
+    "/images/p3.mp4",
     "/uploads/p1.mp4",
     "/uploads/p2.mp4",
   ]

@@ -62,7 +62,7 @@ export default function MediaCarousel({ items, className = "" }: MediaCarouselPr
           <Button
             size="icon"
             variant="secondary"
-            className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/90 hover:bg-white"
+            className="absolute left-2 top-1/2 -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity rounded-full bg-white/90 hover:bg-white"
             onClick={goToPrevious}
           >
             <ChevronLeft className="w-5 h-5" />
@@ -71,7 +71,7 @@ export default function MediaCarousel({ items, className = "" }: MediaCarouselPr
           <Button
             size="icon"
             variant="secondary"
-            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/90 hover:bg-white"
+            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity rounded-full bg-white/90 hover:bg-white"
             onClick={goToNext}
           >
             <ChevronRight className="w-5 h-5" />

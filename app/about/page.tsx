@@ -6,6 +6,17 @@ import { Badge } from "@/components/ui/badge"
 import OptimizedImage from "@/components/optimized-image"
 
 export default function AboutPage() {
+  const REAL_METRICS = {
+    projectsInitiated:     24,    
+    verifiedContractors:   32,    
+    satisfactionRate:      96,    
+    surveySampleSize:      18,    
+    yearsOperating:        1,     
+  };
+  
+  const ACTIVE_CITIES = ['Hyderabad', 'Vijayawada', 'Warangal', 'Secunderabad'];
+  const EXPANSION_TARGET = { citiesBy2027: 15, region: 'South India' };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -43,17 +54,6 @@ export default function AboutPage() {
             </p>
           </div>
         </div>
-
-const REAL_METRICS = {
-  projectsInitiated:     24,    
-  verifiedContractors:   32,    
-  satisfactionRate:      96,    
-  surveySampleSize:      18,    
-  yearsOperating:        1,     
-};
-
-const ACTIVE_CITIES = ['Hyderabad', 'Vijayawada', 'Warangal', 'Secunderabad'];
-const EXPANSION_TARGET = { citiesBy2027: 15, region: 'South India' };
 
         {/* ECOSYSTEM GRID: THE FOUR PILLARS */}
         <section className="container mx-auto px-4 mb-32">

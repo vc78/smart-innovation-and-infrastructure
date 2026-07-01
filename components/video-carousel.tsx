@@ -58,7 +58,7 @@ export default function VideoCarousel() {
           </div>
         </div>
 
-        <Carousel 
+        <Carousel
           opts={{
             align: "start",
             loop: true,
@@ -67,13 +67,13 @@ export default function VideoCarousel() {
         >
           <CarouselContent className="-ml-2 md:-ml-4 items-stretch">
             {videos.map((v, i) => (
-              <CarouselItem key={v.src} className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+              <CarouselItem key={v.src} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 max-w-full">
                 <Card className="p-0 overflow-hidden h-full border-border/40 bg-background/50 backdrop-blur-sm hover:border-primary/30 transition-colors group">
                   <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                    <img 
-                      src={v.poster || "/placeholder.svg"} 
-                      alt={v.title} 
-                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${playing === i ? 'opacity-0' : 'opacity-100'}`} 
+                    <img
+                      src={v.poster || "/placeholder.svg"}
+                      alt={v.title}
+                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${playing === i ? 'opacity-0' : 'opacity-100'}`}
                     />
 
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -112,7 +112,7 @@ export default function VideoCarousel() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          
+
           {/* Mobile-friendly navigation buttons */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <CarouselPrevious className="static translate-y-0 h-10 w-10 border-border/50 bg-background/50 hover:bg-primary hover:text-white transition-all" />
