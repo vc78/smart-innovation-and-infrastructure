@@ -4,8 +4,10 @@ import { useState } from "react"
 import type { BuildingInputs } from "@/lib/3d-model-generator"
 import { ThreeDModelInputForm } from "@/components/3d-model-input-form"
 import { ThreeDModelViewer } from "@/components/3d-model-viewer"
+import { VastuLayoutGenerator } from "@/components/advanced-features/vastu-layout-generator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -17,11 +19,14 @@ import {
   Mountain,
   FileCheck2,
   CheckCircle2,
+  Grid3x3,
+  Layers,
 } from "lucide-react"
 
 export default function ThreeDGeneratorPage() {
   const [buildingInputs, setBuildingInputs] = useState<BuildingInputs | null>(null)
   const [showViewer, setShowViewer] = useState(false)
+  const [viewMode, setViewMode] = useState<"3d" | "2d">("3d")
   const [isAuthorized, setIsAuthorized] = useState(false)
   const router = useRouter()
 
@@ -160,18 +165,47 @@ export default function ThreeDGeneratorPage() {
           <ThreeDModelInputForm onGenerate={handleGenerate} />
         </div>
 
-        {/* 3D Viewer */}
+        {/* 3D / 2D Viewer */}
         <div className="space-y-4">
           {showViewer && buildingInputs ? (
             <>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <h2 className="text-xl md:text-2xl font-semibold">3D Preview</h2>
-                <Badge variant="secondary" className="gap-1 w-fit">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  Live Preview
-                </Badge>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 bg-card p-3 rounded-xl border border-border">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg md:text-xl font-bold tracking-tight">
+                    {viewMode === "3d" ? "3D Spatial Building Preview" : "2D Vector CAD Blueprint"}
+                  </h2>
+                  <Badge variant="secondary" className="gap-1 w-fit">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    Live Render
+                  </Badge>
+                </div>
+                <div className="flex bg-muted p-1 rounded-lg">
+                  <Button
+                    variant={viewMode === "3d" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("3d")}
+                    className="gap-1.5 text-xs font-semibold"
+                  >
+                    <Cube className="w-3.5 h-3.5" />
+                    3D Model
+                  </Button>
+                  <Button
+                    variant={viewMode === "2d" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("2d")}
+                    className="gap-1.5 text-xs font-semibold"
+                  >
+                    <Grid3x3 className="w-3.5 h-3.5" />
+                    2D Floorplan CAD
+                  </Button>
+                </div>
               </div>
-              <ThreeDModelViewer inputs={buildingInputs} autoPlay showControls />
+
+              {viewMode === "3d" ? (
+                <ThreeDModelViewer inputs={buildingInputs} autoPlay showControls />
+              ) : (
+                <VastuLayoutGenerator />
+              )}
 
               {/* Model Info */}
               <Card>
