@@ -223,9 +223,9 @@ export function MaterialCalculator() {
   useEffect(() => {
     const timer = setTimeout(() => {
        if (plotArea > 0) runEstimate();
-    }, 1000);
+    }, 200);
     return () => clearTimeout(timer);
-  }, [length, width, floors, grade, city, amenities, compliances]);
+  }, [length, width, floors, grade, city, direction, soil, cement, steel, beds, baths, kitchenType, archStyle, amenities, compliances, minBudget, maxBudget, plotArea, runEstimate]);
 
   return (
     <Card className="p-4 sm:p-6 md:p-8 lg:p-10 bg-white border-slate-100 shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden relative">
