@@ -35,6 +35,9 @@ import {
   LayoutGrid,
   Cable as Cube,
   Menu,
+  Glasses,
+  Activity,
+  Zap,
 } from "lucide-react"
 
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -50,6 +53,9 @@ import {
   ProjectMilestones,
   QuickActions,
   WeatherWidget,
+  AROverlay,
+  DigitalTwin,
+  EnergyAnalyzer,
 } from "@/components/advanced-features"
 
 export default function DashboardPage() {
@@ -238,6 +244,39 @@ export default function DashboardPage() {
                 >
                   <FileText className="w-5 h-5 flex-shrink-0" />
                   <span className="text-sm font-medium">Documents</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("ar"); if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === "ar"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <Glasses className="w-5 h-5 flex-shrink-0 text-amber-500" />
+                  <span className="text-sm font-medium">AR Spatial View</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("digitaltwin"); if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === "digitaltwin"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <Activity className="w-5 h-5 flex-shrink-0 text-cyan-500" />
+                  <span className="text-sm font-medium">Digital Twin IoT</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("energy"); if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === "energy"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <Zap className="w-5 h-5 flex-shrink-0 text-emerald-500" />
+                  <span className="text-sm font-medium">Energy & Solar</span>
                 </button>
 
                 <Link href="/dashboard/contractors">
@@ -647,6 +686,24 @@ export default function DashboardPage() {
               {activeTab === "documents" && (
                 <ErrorBoundary>
                   <DocumentManager />
+                </ErrorBoundary>
+              )}
+
+              {activeTab === "ar" && (
+                <ErrorBoundary>
+                  <AROverlay />
+                </ErrorBoundary>
+              )}
+
+              {activeTab === "digitaltwin" && (
+                <ErrorBoundary>
+                  <DigitalTwin />
+                </ErrorBoundary>
+              )}
+
+              {activeTab === "energy" && (
+                <ErrorBoundary>
+                  <EnergyAnalyzer />
                 </ErrorBoundary>
               )}
 
