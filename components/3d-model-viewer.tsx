@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { ThreeDModelGenerator, type BuildingInputs } from "@/lib/3d-model-generator"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Download, Play, Pause, RotateCw, Gauge } from "lucide-react"
+import { Download, Play, Pause, RotateCw, Gauge, Sun, Moon, Sunset, Palette } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface ThreeDModelViewerProps {
@@ -18,6 +18,8 @@ export function ThreeDModelViewer({ inputs, autoPlay = true, showControls = true
   const generatorRef = useRef<ThreeDModelGenerator | null>(null)
   const stopAnimationRef = useRef<(() => void) | null>(null)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
+  const [lightingMode, setLightingMode] = useState<"day" | "evening" | "night">(inputs.lightingMode || "day")
+  const [activeMaterial, setActiveMaterial] = useState<"concrete" | "brick" | "aac" | "glass">("concrete")
   const [isLoading, setIsLoading] = useState(true)
   const [fps, setFps] = useState(60)
 
@@ -188,17 +190,69 @@ export function ThreeDModelViewer({ inputs, autoPlay = true, showControls = true
               <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Reset</span>
             </Button>
+
             <div className="w-px h-5 sm:h-6 bg-border mx-0.5" />
+
+            {/* Live Lighting Switcher */}
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-md">
+              <Button
+                size="icon"
+                variant={lightingMode === "day" ? "default" : "ghost"}
+                onClick={() => setLightingMode("day")}
+                className="h-7 w-7"
+                title="Day Sunlight"
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+              </Button>
+              <Button
+                size="icon"
+                variant={lightingMode === "evening" ? "default" : "ghost"}
+                onClick={() => setLightingMode("evening")}
+                className="h-7 w-7"
+                title="Evening Sunset"
+              >
+                <Sunset className="w-3.5 h-3.5 text-orange-400" />
+              </Button>
+              <Button
+                size="icon"
+                variant={lightingMode === "night" ? "default" : "ghost"}
+                onClick={() => setLightingMode("night")}
+                className="h-7 w-7"
+                title="Night Ambient"
+              >
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+              </Button>
+            </div>
+
+            <div className="w-px h-5 sm:h-6 bg-border mx-0.5" />
+
+            {/* Material Finish Switcher */}
+            <Select value={activeMaterial} onValueChange={(val: any) => setActiveMaterial(val)}>
+              <SelectTrigger className="h-8 sm:h-9 w-[100px] sm:w-[130px] text-xs">
+                <Palette className="w-3 h-3 mr-1 text-primary" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="concrete">Concrete</SelectItem>
+                <SelectItem value="brick">Red Brick</SelectItem>
+                <SelectItem value="aac">AAC Block</SelectItem>
+                <SelectItem value="glass">Reflective Glass</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="w-px h-5 sm:h-6 bg-border mx-0.5" />
+
             <Select value={exportFormat} onValueChange={setExportFormat}>
-              <SelectTrigger className="h-8 sm:h-9 w-[90px] sm:w-[120px] text-xs">
+              <SelectTrigger className="h-8 sm:h-9 w-[80px] sm:w-[100px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="gltf">GLTF</SelectItem>
                 <SelectItem value="obj">OBJ</SelectItem>
-                <SelectItem value="json">JSON Data</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
               </SelectContent>
             </Select>
+
             <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5 bg-transparent h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Export</span>
