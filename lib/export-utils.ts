@@ -40,7 +40,7 @@ export async function exportProjectToPDF(project: ProjectData): Promise<void> {
     "Created Date": project.createdAt ? new Date(project.createdAt).toLocaleDateString() : "N/A",
   }
 
-  yPosition = addInfoBox(doc, yPosition, details, pageWidth, pageHeight)
+  yPosition = (addInfoBox as any)(doc, yPosition, details, pageWidth, pageHeight)
 
   // Cost Estimation
   if (project.designs?.estimatedCost) {
@@ -63,7 +63,7 @@ export async function exportProjectToPDF(project: ProjectData): Promise<void> {
       },
     ]
 
-    yPosition = addDataTable(
+    yPosition = (addDataTable as any)(
       doc,
       yPosition,
       costData,
@@ -93,7 +93,7 @@ export async function exportProjectToPDF(project: ProjectData): Promise<void> {
       },
     ]
 
-    yPosition = addDataTable(
+    yPosition = (addDataTable as any)(
       doc,
       yPosition,
       timelineData,
@@ -109,7 +109,7 @@ export async function exportProjectToPDF(project: ProjectData): Promise<void> {
       `Floor Plan: ${arch.floorPlan || "N/A"}`,
       `Layout: ${arch.layout || "N/A"}`,
     ]
-    yPosition = addSection(doc, yPosition, "Architectural Design", archContent, pageWidth, pageHeight)
+    yPosition = (addSection as any)(doc, yPosition, "Architectural Design", archContent, pageWidth, pageHeight)
 
     // Room Dimensions
     if (arch.dimensions?.rooms) {
@@ -119,7 +119,7 @@ export async function exportProjectToPDF(project: ProjectData): Promise<void> {
         "Area": `${room.area} sq ft`
       }))
 
-      yPosition = addDataTable(
+      yPosition = (addDataTable as any)(
         doc,
         yPosition,
         roomData,

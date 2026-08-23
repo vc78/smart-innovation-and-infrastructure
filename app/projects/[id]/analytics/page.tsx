@@ -18,6 +18,7 @@ import {
   History
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import { AuthGuard } from "@/components/auth-guard"
 
 export default function AnalyticsPage() {

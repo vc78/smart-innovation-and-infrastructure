@@ -19,6 +19,7 @@ import {
   RefreshCw,
   ChevronRight,
   ChevronLeft,
+  Sparkles,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateProfessionalDocument } from "@/lib/document-template"

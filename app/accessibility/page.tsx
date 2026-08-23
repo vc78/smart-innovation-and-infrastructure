@@ -55,8 +55,8 @@ export default function AccessibilityPage() {
             <p className="text-muted-foreground leading-relaxed">
               We welcome your feedback on the accessibility of SIID. Please let us know if you encounter accessibility
               barriers by contacting us at{" "}
-              <a href="venkatbodduluri78@gmail.com" className="text-primary hover:underline">
-                venkatbodduluri78@gmail.com
+              <a href="mailto:support@siid.com" className="text-primary hover:underline font-semibold">
+                support@siid.com
               </a>
             </p>
           </section>

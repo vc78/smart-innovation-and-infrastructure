@@ -153,7 +153,7 @@ function extractPhone(text: string): string {
 
 function extractSkills(text: string): string[] {
   const skills: string[] = []
-  const skillsSection = text.match(/SKILLS(.*?)(?=EXPERIENCE|EDUCATION|$)/is)
+  const skillsSection = text.match(/SKILLS([\s\S]*?)(?=EXPERIENCE|EDUCATION|$)/i)
 
   if (skillsSection) {
     const skillText = skillsSection[1]
@@ -172,7 +172,7 @@ function extractSkills(text: string): string[] {
 
 function extractExperience(text: string): ExperienceItem[] {
   const experience: ExperienceItem[] = []
-  const expSection = text.match(/EXPERIENCE(.*?)(?=EDUCATION|CERTIFICATIONS|$)/is)
+  const expSection = text.match(/EXPERIENCE([\s\S]*?)(?=EDUCATION|CERTIFICATIONS|$)/i)
 
   if (expSection) {
     const expText = expSection[1]
@@ -195,7 +195,7 @@ function extractExperience(text: string): ExperienceItem[] {
 
 function extractEducation(text: string): EducationItem[] {
   const education: EducationItem[] = []
-  const eduSection = text.match(/EDUCATION(.*?)$/is)
+  const eduSection = text.match(/EDUCATION([\s\S]*?)$/i)
 
   if (eduSection) {
     const eduText = eduSection[1]
@@ -215,7 +215,7 @@ function extractEducation(text: string): EducationItem[] {
 }
 
 function extractSummary(text: string): string {
-  const summarySection = text.match(/(?:PROFESSIONAL SUMMARY|SUMMARY|OBJECTIVE)(.*?)(?=SKILLS|EXPERIENCE|EDUCATION)/is)
+  const summarySection = text.match(/(?:PROFESSIONAL SUMMARY|SUMMARY|OBJECTIVE)([\s\S]*?)(?=SKILLS|EXPERIENCE|EDUCATION)/i)
   return summarySection ? summarySection[1].trim() : ""
 }
 

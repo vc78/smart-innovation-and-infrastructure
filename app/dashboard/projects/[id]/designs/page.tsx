@@ -295,7 +295,7 @@ export default function AdvancedProjectDesignsPage() {
                            {Object.entries(project.estimation?.itemized || {}).map(([key, val]) => (
                               <div key={key} className="flex justify-between text-xs">
                                 <span className="text-white/40 capitalize">{key.replace('_', ' ')}</span>
-                                <span className="font-bold text-white/80">₹{val}L</span>
+                                <span className="font-bold text-white/80">₹{String(val)}L</span>
                               </div>
                            ))}
                         </div>

@@ -250,7 +250,7 @@ export default function DashboardPage() {
                 <Link href="/dashboard/careers">
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Briefcase className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm font-medium">Careers</span>
+                    <span className="text-sm font-medium">Recruitment</span>
                   </button>
                 </Link>
 

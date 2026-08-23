@@ -34,6 +34,12 @@ export const ML_MODEL_WEIGHTS = {
     water_per_bag_cement: 28,
   },
   mappings: {
+    quality: {
+      economy: 0.85,
+      standard: 1.0,
+      premium: 1.25,
+      luxury: 1.5,
+    },
     cement_grade: {
       OPC33: 0.95,
       OPC43: 1.0,
@@ -77,8 +83,22 @@ export const ML_MODEL_WEIGHTS = {
   },
   parameters: {
     cement: {
+      base_rate: 0.42,
       room_impact: 0.05,
-    }
+    },
+    steel: {
+      base_rate: 0.0035,
+      room_impact: 0.02,
+    },
+    bricks: {
+      base_rate: 9.5,
+      room_impact: 0.03,
+    },
+    cost: {
+      base_rate: 2400,
+      base_per_sqft: 2400,
+      room_impact: 0.02,
+    },
   },
   metrics: {
     r2_score: 0.998,

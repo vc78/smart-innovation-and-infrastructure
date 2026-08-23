@@ -66,7 +66,7 @@ export default function ThreeDGeneratorPage() {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card className="hover:border-primary/50 transition-colors">
             <CardHeader className="pb-3">
               <Maximize2 className="w-5 h-5 text-primary mb-2" />

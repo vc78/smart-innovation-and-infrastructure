@@ -1,10 +1,6 @@
 import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
 
-/**
- * Professional document template with company branding
- */
-
 export interface DocumentTemplateConfig {
     title: string
     subtitle?: string
@@ -21,24 +17,17 @@ export interface DocumentTemplateConfig {
 }
 
 const COMPANY_NAME = "SIID - Smart Intelligent Integrated Design"
-const COMPANY_LOGO_COLOR = [59, 130, 246] // Primary blue
-const BRANDING_COLOR = [59, 130, 246]
-const TEXT_COLOR = [15, 23, 42] // Dark gray
-const MUTED_COLOR = [100, 116, 139] // Muted gray
-const ACCENT_COLOR = [244, 63, 94] // Rose/red accent
+const BRANDING_COLOR: [number, number, number] = [59, 130, 246]
+const TEXT_COLOR: [number, number, number] = [15, 23, 42]
+const MUTED_COLOR: [number, number, number] = [100, 116, 139]
+const ACCENT_COLOR: [number, number, number] = [244, 63, 94]
 
-/**
- * Creates a professional PDF header with company branding
- */
 export function createDocumentHeader(doc: jsPDF, title: string, subtitle?: string) {
     const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
 
-    // Header background
-    doc.setFillColor(...BRANDING_COLOR)
+    doc.setFillColor(BRANDING_COLOR[0], BRANDING_COLOR[1], BRANDING_COLOR[2])
     doc.rect(0, 0, pageWidth, 40, "F")
 
-    // Company name/logo area
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
     doc.setFontSize(14)
@@ -46,276 +35,225 @@ export function createDocumentHeader(doc: jsPDF, title: string, subtitle?: strin
     doc.setFontSize(8)
     doc.text("Smart Intelligent Integrated Design", 15, 22)
 
-    // Title on the right
     doc.setFontSize(16)
     doc.setFont("helvetica", "bold")
     doc.text(title, pageWidth - 15, 15, { align: "right" })
 
-    // Subtitle if provided
     if (subtitle) {
         doc.setFontSize(9)
         doc.setFont("helvetica", "normal")
         doc.text(subtitle, pageWidth - 15, 23, { align: "right" })
     }
 
-    // Border line
-    doc.setDrawColor(...BRANDING_COLOR)
-    doc.setLineWidth(0.5)
+    doc.setDrawColor(ACCENT_COLOR[0], ACCENT_COLOR[1], ACCENT_COLOR[2])
+    doc.setLineWidth(2)
     doc.line(0, 40, pageWidth, 40)
-
-    return 50 // Return Y position for content
 }
 
-/**
- * Creates a professional footer with company details
- */
 export function createDocumentFooter(doc: jsPDF, customText?: string) {
+    const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const pageWidth = doc.internal.pageSize.getWidth()
 
-    // Footer line
-    doc.setDrawColor(...MUTED_COLOR)
-    doc.setLineWidth(0.3)
-    doc.line(15, pageHeight - 25, pageWidth - 15, pageHeight - 25)
-
-    // Footer text
-    doc.setFontSize(8)
-    doc.setTextColor(...MUTED_COLOR)
-    doc.setFont("helvetica", "normal")
-
-    const footerText = customText || "Official SIID Document | Confidential"
-    doc.text(footerText, 15, pageHeight - 18)
-
-    // Company branding footer
-    doc.setFontSize(7)
-    doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 15, pageHeight - 18, {
-        align: "right",
-    })
-    doc.text("© 2024 SIID. All rights reserved.", pageWidth - 15, pageHeight - 13, {
-        align: "right",
-    })
-}
-
-/**
- * Add a section with heading and content
- */
-export function addSection(
-    doc: jsPDF,
-    yPosition: number,
-    heading: string,
-    content: string | string[],
-    pageWidth: number,
-    pageHeight: number
-) {
-    let currentY = yPosition
-
-    // Check if need new page
-    if (currentY > pageHeight - 40) {
-        doc.addPage()
-        currentY = 20
-        createDocumentHeader(doc, "Document Continuation")
-    }
-
-    // Section heading
-    doc.setFontSize(12)
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(...BRANDING_COLOR)
-    doc.text(heading, 15, currentY)
-    currentY += 6
-
-    // Section content
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "normal")
-    doc.setTextColor(...TEXT_COLOR)
-
-    if (Array.isArray(content)) {
-        content.forEach((line) => {
-            const wrappedText = doc.splitTextToSize(line, pageWidth - 30)
-            doc.text(wrappedText, 15, currentY)
-            currentY += wrappedText.length * 5 + 3
-        })
-    } else {
-        const wrappedText = doc.splitTextToSize(content, pageWidth - 30)
-        doc.text(wrappedText, 15, currentY)
-        currentY += wrappedText.length * 5
-    }
-
-    currentY += 5
-
-    return currentY
-}
-
-/**
- * Add a data table with professional styling
- */
-export function addDataTable(
-    doc: jsPDF,
-    yPosition: number,
-    data: { [key: string]: string | number }[],
-    columns: string[],
-    pageHeight: number
-) {
-    if (data.length === 0) return yPosition
-
-    const pageWidth = doc.internal.pageSize.getWidth()
-
-    // Check if need new page
-    if (yPosition > pageHeight - 60) {
-        doc.addPage()
-        yPosition = 20
-        createDocumentHeader(doc, "Document Continuation")
-    }
-
-    const tableData = data.map((row) =>
-        columns.map((col) => String(row[col] || "N/A"))
-    )
-
-    autoTable(doc, {
-        startY: yPosition,
-        head: [columns],
-        body: tableData,
-        theme: "grid",
-        headStyles: {
-            fillColor: BRANDING_COLOR,
-            textColor: [255, 255, 255],
-            fontStyle: "bold",
-            fontSize: 10,
-            halign: "center",
-        },
-        bodyStyles: {
-            textColor: TEXT_COLOR,
-            fontSize: 9,
-        },
-        alternateRowStyles: {
-            fillColor: [244, 244, 245],
-        },
-        margin: { left: 15, right: 15 },
-        didDrawPage: () => {
-            createDocumentFooter(doc)
-        },
-    })
-
-    return (doc as any).lastAutoTable.finalY + 10
-}
-
-/**
- * Add key-value pairs as a professional info box
- */
-export function addInfoBox(
-    doc: jsPDF,
-    yPosition: number,
-    data: { [key: string]: string | number },
-    pageWidth: number,
-    pageHeight: number
-) {
-    let currentY = yPosition
-
-    // Check if need new page
-    if (currentY > pageHeight - 50) {
-        doc.addPage()
-        currentY = 20
-        createDocumentHeader(doc, "Document Continuation")
-    }
-
-    // Light background
-    doc.setFillColor(243, 244, 246)
-    doc.rect(15, currentY, pageWidth - 30, Object.keys(data).length * 8 + 5, "F")
-
-    // Border
-    doc.setDrawColor(...BRANDING_COLOR)
+    doc.setDrawColor(226, 232, 240)
     doc.setLineWidth(0.5)
-    doc.rect(15, currentY, pageWidth - 30, Object.keys(data).length * 8 + 5)
+    doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15)
 
-    // Content
-    doc.setFontSize(9)
-    currentY += 5
+    doc.setFontSize(8)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(MUTED_COLOR[0], MUTED_COLOR[1], MUTED_COLOR[2])
+    
+    const text = customText || "Confidential - For Internal Use Only | " + COMPANY_NAME
+    doc.text(text, 15, pageHeight - 8)
 
-    Object.entries(data).forEach(([key, value]) => {
-        doc.setFont("helvetica", "bold")
-        doc.setTextColor(...BRANDING_COLOR)
-        doc.text(`${key}:`, 20, currentY)
-
-        doc.setFont("helvetica", "normal")
-        doc.setTextColor(...TEXT_COLOR)
-        const wrappedValue = doc.splitTextToSize(String(value), pageWidth - 80)
-        doc.text(wrappedValue, 80, currentY)
-
-        currentY += 8
-    })
-
-    return currentY + 8
+    const pageCount = (doc as any).internal.getNumberOfPages()
+    const pageCurrent = (doc as any).internal.getCurrentPageInfo().pageNumber
+    doc.text(`Page ${pageCurrent} of ${pageCount}`, pageWidth - 15, pageHeight - 8, { align: "right" })
 }
 
-/**
- * Create a complete professional document
- */
-export async function generateProfessionalDocument(
-    config: DocumentTemplateConfig
-): Promise<jsPDF> {
+export function generateBrandedDocument(config: DocumentTemplateConfig): jsPDF {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
+    let yPosition = 50
 
-    let yPosition = createDocumentHeader(
-        doc,
-        config.title,
-        config.subtitle
-    )
+    createDocumentHeader(doc, config.title, config.subtitle)
 
-    // Main content
     if (config.content) {
-        yPosition = addSection(doc, yPosition, "Overview", config.content, pageWidth, pageHeight)
+        doc.setFontSize(10)
+        doc.setFont("helvetica", "normal")
+        doc.setTextColor(TEXT_COLOR[0], TEXT_COLOR[1], TEXT_COLOR[2])
+
+        const splitText = doc.splitTextToSize(config.content, pageWidth - 30)
+        doc.text(splitText, 15, yPosition)
+        yPosition += splitText.length * 5 + 10
     }
 
-    // Sections
-    if (config.sections) {
+    if (config.sections && config.sections.length > 0) {
         for (const section of config.sections) {
-            yPosition = addSection(doc, yPosition, section.heading, section.content, pageWidth, pageHeight)
+            if (yPosition > 250) {
+                doc.addPage()
+                yPosition = 20
+            }
+
+            doc.setFontSize(12)
+            doc.setFont("helvetica", "bold")
+            doc.setTextColor(BRANDING_COLOR[0], BRANDING_COLOR[1], BRANDING_COLOR[2])
+            doc.text(section.heading, 15, yPosition)
+            yPosition += 7
+
+            doc.setFontSize(10)
+            doc.setFont("helvetica", "normal")
+            doc.setTextColor(TEXT_COLOR[0], TEXT_COLOR[1], TEXT_COLOR[2])
+
+            if (Array.isArray(section.content)) {
+                for (const item of section.content) {
+                    if (yPosition > 270) {
+                        doc.addPage()
+                        yPosition = 20
+                    }
+                    doc.text(`• ${item}`, 20, yPosition)
+                    yPosition += 6
+                }
+                yPosition += 5
+            } else {
+                const splitContent = doc.splitTextToSize(section.content, pageWidth - 30)
+                if (yPosition + splitContent.length * 5 > 270) {
+                    doc.addPage()
+                    yPosition = 20
+                }
+                doc.text(splitContent, 15, yPosition)
+                yPosition += splitContent.length * 5 + 10
+            }
         }
     }
 
-    // Data table
-    if (config.data && config.columns) {
-        yPosition = addDataTable(doc, yPosition, config.data, config.columns, pageHeight)
-    }
+    if (config.data && config.data.length > 0) {
+        if (yPosition > 220) {
+            doc.addPage()
+            yPosition = 20
+        }
 
-    // Info box
-    if (config.data && !config.columns) {
-        const infoData = Array.isArray(config.data) ? config.data[0] : config.data
-        yPosition = addInfoBox(doc, yPosition, infoData as { [key: string]: string | number }, pageWidth, pageHeight)
-    }
+        const columns = config.columns || Object.keys(config.data[0])
+        const tableData = config.data.map((row) =>
+            columns.map((col) => String(row[col] || "N/A"))
+        )
 
-    // Footer on all pages
-    const totalPages = (doc as any).getNumberOfPages?.() || 1
-    for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i)
+        autoTable(doc, {
+            startY: yPosition,
+            head: [columns],
+            body: tableData,
+            theme: "grid",
+            headStyles: {
+                fillColor: BRANDING_COLOR,
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+                fontSize: 10,
+                halign: "center",
+            },
+            bodyStyles: {
+                textColor: TEXT_COLOR,
+                fontSize: 9,
+            },
+            alternateRowStyles: {
+                fillColor: [244, 244, 245],
+            },
+            margin: { left: 15, right: 15 },
+            didDrawPage: () => {
+                createDocumentFooter(doc, config.footerText)
+            },
+        })
+    } else {
         createDocumentFooter(doc, config.footerText)
     }
 
     return doc
 }
 
-/**
- * Quick export function for simple documents
- */
-export async function exportAsBeautifulPDF(
-    filename: string,
-    title: string,
-    data: any,
-    options?: {
-        subtitle?: string
-        sections?: Array<{ heading: string; content: string | string[] }>
-        columns?: string[]
-    }
-): Promise<void> {
-    const doc = await generateProfessionalDocument({
-        title,
-        subtitle: options?.subtitle,
-        data: Array.isArray(data) ? data : [data],
-        columns: options?.columns,
-        sections: options?.sections,
-        footerText: "Official Project Document | Confidential",
-    })
+export function downloadBrandedDocument(config: DocumentTemplateConfig, filename?: string) {
+    const doc = generateBrandedDocument(config)
+    const name = filename || `${config.title.toLowerCase().replace(/\s+/g, "_")}.pdf`
+    doc.save(name)
+}
 
-    doc.save(filename)
+export const generateProfessionalDocument = generateBrandedDocument
+
+export function exportAsBeautifulPDF(filenameOrTitle: any, title?: string, data?: any, options?: any) {
+  if (typeof filenameOrTitle === "object" && filenameOrTitle.title) {
+    downloadBrandedDocument(filenameOrTitle, title)
+  } else {
+    const config: DocumentTemplateConfig = {
+      title: title || String(filenameOrTitle),
+      data: Array.isArray(data) ? data : undefined,
+      subtitle: options?.subtitle,
+      columns: options?.columns,
+      sections: options?.sections,
+    }
+    const name = typeof filenameOrTitle === "string" ? filenameOrTitle : `${config.title.toLowerCase().replace(/\s+/g, "_")}.pdf`
+    downloadBrandedDocument(config, name.endsWith(".pdf") ? name : `${name}.pdf`)
+  }
+}
+
+export function addSection(doc: jsPDF, yPosition: number, heading: string, content: string | string[], pageWidth?: number, pageHeight?: number): number {
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(BRANDING_COLOR[0], BRANDING_COLOR[1], BRANDING_COLOR[2])
+  doc.text(heading, 15, yPosition)
+  let y = yPosition + 7
+
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(TEXT_COLOR[0], TEXT_COLOR[1], TEXT_COLOR[2])
+
+  if (Array.isArray(content)) {
+    for (const item of content) {
+      if (y > 270) {
+        doc.addPage()
+        y = 20
+      }
+      doc.text(`• ${item}`, 20, y)
+      y += 6
+    }
+    y += 5
+  } else {
+    const splitContent = doc.splitTextToSize(content, (pageWidth || 210) - 30)
+    if (y + splitContent.length * 5 > 270) {
+      doc.addPage()
+      y = 20
+    }
+    doc.text(splitContent, 15, y)
+    y += splitContent.length * 5 + 10
+  }
+  return y
+}
+
+export function addDataTable(doc: jsPDF, yPosition: number, data: any[], columns?: string[], pageHeight?: number): number {
+  if (!data || data.length === 0) return yPosition
+  const cols = columns || Object.keys(data[0] || {})
+  const tableData = data.map((row) => cols.map((col) => String(row[col] || "N/A")))
+
+  autoTable(doc, {
+    startY: yPosition,
+    head: [cols],
+    body: tableData,
+    theme: "grid",
+    headStyles: { fillColor: BRANDING_COLOR, textColor: [255, 255, 255], fontStyle: "bold" },
+    margin: { left: 15, right: 15 },
+  })
+  return (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 15 : yPosition + 40
+}
+
+export function addInfoBox(doc: jsPDF, yPosition: number, details: Record<string, any>, pageWidth?: number, pageHeight?: number): number {
+  doc.setFontSize(10)
+  let y = yPosition
+  Object.entries(details).forEach(([key, val]) => {
+    if (y > 270) {
+      doc.addPage()
+      y = 20
+    }
+    doc.setFont("helvetica", "bold")
+    doc.text(`${key}:`, 15, y)
+    doc.setFont("helvetica", "normal")
+    doc.text(String(val || "N/A"), 65, y)
+    y += 6
+  })
+  return y + 5
 }

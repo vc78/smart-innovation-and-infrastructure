@@ -20,6 +20,12 @@ import {
   Cog,
   BarChart3,
   Globe,
+  Calculator,
+  Compass,
+  FileText,
+  MessageSquare,
+  Wrench,
+  Boxes,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -29,7 +35,7 @@ import ConstructionAssistant from "@/components/construction-assistant"
 import MediaFallbackInjector from "@/components/media-fallback-injector"
 
 import KpiCounters from "@/components/kpi-counters"
-import VideoCarousel from "@/components/video-carousel"
+import ImageCarousel from "@/components/image-carousel"
 import { HeadlineScroller } from "@/components/headline-scroller"
 import { CompanyLogoScroller } from "@/components/company-logo-scroller"
 import ProgressAnalytics from "@/components/progress-analytics"
@@ -60,8 +66,8 @@ export default function LandingPage() {
 
   const heroVideos = [
     "/images/p3.mp4",
-    "/uploads/p1.mp4",
-    "/uploads/p2.mp4",
+    "/images/p1.mp4",
+    "/images/p2.mp4",
   ]
 
   useEffect(() => {
@@ -163,33 +169,20 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative w-full min-h-[90vh] md:min-h-screen flex items-center overflow-hidden py-32">
-        {/* Background Video Layer */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <video
-            key={heroVideos[currentVideoIndex]}
-            src={heroVideos[currentVideoIndex]}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster="/images/interior-design-3d-walkthrough.jpg"
-            className="w-full h-full object-cover transition-opacity duration-1000"
+        {/* Architectural Background Render Layer */}
+        <div className="absolute inset-0 z-0 overflow-hidden bg-slate-950">
+          <img
+            src="/images/hero_architectural_background.png"
+            alt="Futuristic Architectural Design Background"
+            className="w-full h-full object-cover scale-105 animate-pulse-slow opacity-80"
           />
-          {/* Dark Overlay (IMPORTANT) */}
-          <div className="absolute inset-0 bg-black/50"></div>
+          {/* Subtle Grid Overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+          {/* Vignette & Ambient Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
         </div>
 
-        {/* Vanta background sits behind content - Made optional to prevent blocking video */}
-        {false && (
-          <VantaBackground
-            effect="waves"
-            color={0x1e3a8a} // deep blue matching brand
-            backgroundAlpha={0.1} // Reduced visibility
-            minHeight={420}
-            className="absolute inset-0 pointer-events-none"
-          />
-        )}
         <div className="relative z-10 container mx-auto px-4">
           <div className="w-full max-w-3xl">
             <div className="animate-slide-up">
@@ -198,10 +191,10 @@ export default function LandingPage() {
                 Intelligent Construction Platform
               </div>
               <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-balance text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
-                Turn Your's Dream Home Into Reality
+                Turn Your Dream Home Into Reality
               </h1>
               <p className="text-lg md:text-xl text-white/90 font-medium mb-8 text-pretty leading-relaxed max-w-prose drop-shadow-md">
-                SIID  brings parametric design, real-time cost analysis, and AI-powered MEP systems to architects, contractors, and engineers. From concept to construction—accelerate your workflow with intelligent automation.
+                SIID brings parametric design, real-time cost analysis, and AI-powered MEP systems to architects, contractors, and engineers. From concept to construction—accelerate your workflow with intelligent automation.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <Link href="/projects/create">
@@ -263,12 +256,12 @@ export default function LandingPage() {
           {/* Main Video Carousel */}
           <div>
             <div className="text-center mb-12">
-              <h2 className="text-sm font-bold tracking-widest text-primary uppercase mb-3">Featured Highlights</h2>
+              <h2 className="text-sm font-bold tracking-widest text-primary uppercase mb-3">Aesthetic Design Showcase</h2>
               <h3 className="text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                Immersive Project Views
+                Immersive Architectural Renders
               </h3>
             </div>
-            <VideoCarousel />
+            <ImageCarousel />
           </div>
 
         </div>
@@ -299,7 +292,7 @@ export default function LandingPage() {
           </div>
 
           {/* Core Features Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {/* MEP Systems */}
             <Card className="p-6 border-border/60 hover-lift relative group overflow-hidden">
               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-500" />
@@ -393,12 +386,160 @@ export default function LandingPage() {
             </Card>
           </div>
 
+          {/* SIID Suite of Intelligent Tools Showcase */}
+          <div className="mt-24 pt-20 border-t border-border/60 relative">
+            {/* Background glowing accent orbs */}
+            <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+            <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <Badge variant="outline" className="mb-4 px-5 py-1.5 border-primary/40 text-primary bg-primary/10 rounded-full font-bold shadow-md">
+                <Boxes className="w-4 h-4 mr-2 inline" />
+                Integrated Toolsuite
+              </Badge>
+              <h3 className="text-3xl md:text-5xl font-black tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-primary">
+                Comprehensive Engineering & Design Tools
+              </h3>
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                Everything you need to generate 3D models, create blueprints, estimate material BOQs, evaluate Vastu, and connect with contractors.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Tool 1: 3D Generator (Cyan / Blue Theme) */}
+              <Card className="p-7 border-border/60 hover:border-cyan-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(6,182,212,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-cyan-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-cyan-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300 text-cyan-500 shadow-md">
+                    <Building2 className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold text-xs">Interactive 3D Engine</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-cyan-500 transition-colors">3D Building & Spatial Generator</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Generate 3D structural models, customize lighting, preview exterior facades, and perform interactive walkthroughs in real-time.
+                  </p>
+                </div>
+                <Link href="/3d-generator">
+                  <Button className="w-full justify-between bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500 hover:text-white border border-cyan-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Launch 3D Generator
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+
+              {/* Tool 2: Blueprint & Project Creator (Violet / Indigo Theme) */}
+              <Card className="p-7 border-border/60 hover:border-violet-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-violet-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-violet-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 text-violet-500 shadow-md">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/30 font-bold text-xs">Smart Blueprints</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-violet-500 transition-colors">AI Architectural Plan Generator</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Create complete architectural floor plans, MEP conduit routing, room dimension specs, and structural framing calculations instantly.
+                  </p>
+                </div>
+                <Link href="/projects/create">
+                  <Button className="w-full justify-between bg-violet-500/10 text-violet-600 dark:text-violet-300 hover:bg-violet-600 hover:text-white border border-violet-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Create New Blueprint
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+
+              {/* Tool 3: Cost Engine & BOQ Calculator (Emerald / Teal Theme) */}
+              <Card className="p-7 border-border/60 hover:border-emerald-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-emerald-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-emerald-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 text-emerald-600 dark:text-emerald-400 shadow-md">
+                    <Calculator className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold text-xs">Deterministic BOQ</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-emerald-500 transition-colors">Cost & Material Estimator</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Calculate exact quantities for cement bags, steel tonnage, sand CFT, aggregate, and bricks based on live market pricing and city indices.
+                  </p>
+                </div>
+                <Link href="/dashboard/new-project">
+                  <Button className="w-full justify-between bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Calculate Estimates
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+
+              {/* Tool 4: Vastu Compliance Engine (Amber / Orange Theme) */}
+              <Card className="p-7 border-border/60 hover:border-amber-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-amber-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-amber-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300 text-amber-600 dark:text-amber-400 shadow-md">
+                    <Compass className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold text-xs">Spatial Compliance</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-amber-500 transition-colors">Vastu Layout Audit & Scoring</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Evaluate room orientations, main entrance positioning, and elemental alignments against ancient and modern Vastu engineering rules.
+                  </p>
+                </div>
+                <Link href="/dashboard/projects/1/designs">
+                  <Button className="w-full justify-between bg-amber-500/10 text-amber-600 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Check Vastu Score
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+
+              {/* Tool 5: Contractor Marketplace (Rose / Pink Theme) */}
+              <Card className="p-7 border-border/60 hover:border-rose-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-rose-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-rose-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300 text-rose-600 dark:text-rose-400 shadow-md">
+                    <Wrench className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs">Verified Professionals</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-rose-500 transition-colors">Contractor Marketplace</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Connect directly with verified structural contractors, MEP specialists, and civil engineers with ratings, hourly rates, and portfolios.
+                  </p>
+                </div>
+                <Link href="/dashboard/contractors">
+                  <Button className="w-full justify-between bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Find Contractors
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+
+              {/* Tool 6: 24/7 AI Assistant (Blue / Sky Theme) */}
+              <Card className="p-7 border-border/60 hover:border-blue-500/60 transition-all duration-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] hover:-translate-y-2 flex flex-col justify-between group bg-gradient-to-b from-blue-500/5 via-card/90 to-card backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all pointer-events-none" />
+                <div>
+                  <div className="w-14 h-14 bg-blue-500/15 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 text-blue-600 dark:text-blue-400 shadow-md">
+                    <MessageSquare className="w-7 h-7" />
+                  </div>
+                  <Badge className="mb-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 font-bold text-xs">24/7 Intelligence</Badge>
+                  <h4 className="text-xl font-bold mb-3 group-hover:text-blue-500 transition-colors">AI Construction Assistant</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Get instant answers on local municipal building codes, material ratios, timeline risk mitigation, and structural calculations.
+                  </p>
+                </div>
+                <Link href="/assistant">
+                  <Button className="w-full justify-between bg-blue-500/10 text-blue-600 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-500/30 transition-all duration-300 font-bold" variant="outline">
+                    Ask AI Assistant
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </Card>
+            </div>
+          </div>
+
           {/* Call to Action */}
-          <div className="mt-12 text-center">
-            <p className="text-sm text-muted-foreground mb-4">Ready to experience the future of design?</p>
+          <div className="mt-16 text-center">
+            <p className="text-sm text-muted-foreground mb-4">Ready to experience the future of smart design & engineering?</p>
             <Link href="/3d-generator">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                Explore Platform
+                Explore All Tools
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -416,7 +557,7 @@ export default function LandingPage() {
 
       < section className="py-20 bg-muted" >
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <BudgetEstimator />
 
             <InsightsSearch />
@@ -437,7 +578,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card className="p-6 border-border hover-lift">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Cog className="w-6 h-6 text-primary" />
@@ -512,7 +653,7 @@ export default function LandingPage() {
               <p className="text-lg text-muted-foreground">Building not just homes, but smarter societies</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="p-6 border-border bg-background">
                 <Building2 className="w-8 h-8 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-3">Beyond Individual Homes</h3>
@@ -843,7 +984,7 @@ export default function LandingPage() {
 
           <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground text-center md:text-left">
-              © 2025 SIID. All rights reserved. Built with passion in India.
+              © {new Date().getFullYear()} SIID. All rights reserved. Built with passion in India.
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link href="/sitemap" className="hover:text-foreground transition-colors">

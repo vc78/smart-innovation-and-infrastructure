@@ -157,7 +157,7 @@ export function ThreeDModelViewer({ inputs, autoPlay = true, showControls = true
 
   return (
     <Card className="relative overflow-hidden">
-      <canvas ref={canvasRef} className="w-full h-[600px] bg-gradient-to-b from-sky-200 to-sky-50" />
+      <canvas ref={canvasRef} className="w-full h-[360px] sm:h-[480px] md:h-[600px] bg-gradient-to-b from-sky-200 to-sky-50" />
 
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -172,25 +172,25 @@ export function ThreeDModelViewer({ inputs, autoPlay = true, showControls = true
         <>
           {/* FPS Counter */}
           {inputs.enableAdaptiveQuality && (
-            <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg flex items-center gap-2">
-              <Gauge className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{fps} FPS</span>
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <span className="font-medium">{fps} FPS</span>
             </div>
           )}
 
           {/* Control Panel */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-            <Button size="sm" variant="outline" onClick={toggleAnimation} className="gap-2 bg-transparent">
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              {isPlaying ? "Pause" : "Play"}
+          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 bg-background/90 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 shadow-lg max-w-[95%]">
+            <Button size="sm" variant="outline" onClick={toggleAnimation} className="gap-1.5 bg-transparent h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              {isPlaying ? <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
             </Button>
-            <Button size="sm" variant="outline" onClick={resetCamera} className="gap-2 bg-transparent">
-              <RotateCw className="w-4 h-4" />
-              Reset
+            <Button size="sm" variant="outline" onClick={resetCamera} className="gap-1.5 bg-transparent h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Reset</span>
             </Button>
-            <div className="w-px h-6 bg-border mx-1" />
+            <div className="w-px h-5 sm:h-6 bg-border mx-0.5" />
             <Select value={exportFormat} onValueChange={setExportFormat}>
-              <SelectTrigger className="h-9 w-[120px] text-xs">
+              <SelectTrigger className="h-8 sm:h-9 w-[90px] sm:w-[120px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -199,22 +199,20 @@ export function ThreeDModelViewer({ inputs, autoPlay = true, showControls = true
                 <SelectItem value="json">JSON Data</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 bg-transparent">
-              <Download className="w-4 h-4" />
-              Export
+            <Button size="sm" variant="outline" onClick={handleExport} className="gap-1.5 bg-transparent h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
 
           {/* Info Panel */}
-          <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg space-y-1 text-xs">
-            <p className="font-medium">Building Stats:</p>
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-background/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 shadow-lg space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
+            <p className="font-semibold">Building Stats:</p>
             <p>Floors: {inputs.numberOfFloors}</p>
             <p>Height: {(inputs.numberOfFloors * inputs.floorHeight).toFixed(1)}m</p>
             <p>
               Plot: {inputs.plotDimensions.length}m × {inputs.plotDimensions.width}m
             </p>
-            <p>Camera: {inputs.cameraMode}</p>
-            <p>Quality: {inputs.renderQuality}</p>
           </div>
         </>
       )}

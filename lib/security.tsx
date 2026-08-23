@@ -90,7 +90,7 @@ export function validateAuthToken(token: string): SecurityContext | null {
     return {
       userId: payload.userId,
       role: payload.role,
-      permissions: rolePermissions[payload.role] || [],
+      permissions: rolePermissions[payload.role as keyof typeof rolePermissions] || [],
       sessionToken: token,
     }
   } catch (error) {

@@ -48,7 +48,8 @@ import {
   Fingerprint,
   Expand,
   ShieldAlert,
-  Monitor
+  Monitor,
+  Terminal,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"

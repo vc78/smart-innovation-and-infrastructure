@@ -23,7 +23,7 @@ export function ShareButton({ data, variant = "outline", size = "sm", showText =
     try {
       if (method === "link") {
         // Create and copy secure link
-        const link = createSecureLink(data.url || window.location.href, "general")
+        const link = createSecureLink(data.url || window.location.href)
         try {
           await navigator.clipboard.writeText(link)
           toast({
@@ -94,7 +94,7 @@ export function ShareButton({ data, variant = "outline", size = "sm", showText =
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {navigator.share && (
+        {typeof navigator !== "undefined" && typeof (navigator as any).share === "function" && (
           <DropdownMenuItem onClick={() => handleShare("auto")}>
             <Share2 className="w-4 h-4 mr-2" />
             Share...

@@ -307,7 +307,7 @@ export function HomeAssistant({
                           onClick={() =>
                             setFeedbackByMessage((prev) => ({
                               ...prev,
-                              [m.id]: prev[m.id] === "up" ? undefined : "up",
+                              [m.id]: (prev[m.id] === "up" ? undefined : "up") as any,
                             }))
                           }
                           className={cn(
@@ -321,7 +321,7 @@ export function HomeAssistant({
                           onClick={() =>
                             setFeedbackByMessage((prev) => ({
                               ...prev,
-                              [m.id]: prev[m.id] === "down" ? undefined : "down",
+                              [m.id]: (prev[m.id] === "down" ? undefined : "down") as any,
                             }))
                           }
                           className={cn(

@@ -351,7 +351,7 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
 
         {activeLayout === 'arch' && !is3D && (
           <g fill="currentColor" opacity="0.8" fontSize="12" fontWeight="600" textAnchor="middle">
-             <text x={offX+svgW*0.15} y={offY+svgH*0.25}>{features.beds >= 2 ? 'Bed 1' : 'Study'}</text>
+             <text x={offX+svgW*0.15} y={offY+svgH*0.25}>{parseInt(features.beds || "1") >= 2 ? 'Bed 1' : 'Study'}</text>
              <text x={offX+svgW*0.15} y={offY+svgH*0.25 + 14} fontSize="9" opacity="0.6">{Math.round(lRaw*0.3)}' x {Math.round(wRaw*0.5)}'</text>
              <text x={offX+svgW*0.15} y={offY+svgH*0.75}>Master Bed</text>
              <text x={offX+svgW*0.15} y={offY+svgH*0.75 + 14} fontSize="9" opacity="0.6">{Math.round(lRaw*0.3)}' x {Math.round(wRaw*0.5)}'</text>
@@ -481,6 +481,26 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
     <div className="min-h-screen bg-background text-foreground py-10 px-4 md:px-8 font-sans">
       <div className="max-w-5xl mx-auto space-y-8">
         
+        {/* DEMO MODE BANNER */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full">
+              Demo Mode
+            </span>
+            <p className="text-xs text-muted-foreground font-medium">
+              Interactive Estimator & Layout Preview. Preliminary calculations — sign in to launch an active project.
+            </p>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => router.push('/dashboard/new-project')} 
+            className="text-xs font-bold whitespace-nowrap"
+          >
+            Launch Active Project
+          </Button>
+        </div>
+        
         {/* HEADER */}
         <header className="space-y-6">
           <Button variant="ghost" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground -ml-4">
@@ -521,7 +541,7 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="font-semibold">Plot Dimensions (L × W)</Label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                        <Input placeholder="Length (ft)" type="number" className="h-12" value={plot.length} onChange={e => {
                          const l = e.target.value; const w = plot.width;
                          setPlot({...plot, length: l, area: (parseFloat(l||'0')*parseFloat(w||'0')||'').toString()})
@@ -538,9 +558,9 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
                   </div>
                   <div className="space-y-3">
                      <Label className="font-semibold">Location Tracker (Live)</Label>
-                     <div className="flex gap-2">
-                        <Input placeholder="City Name" className="h-12" value={plot.city} onChange={e => setPlot({...plot, city: e.target.value})} />
-                        <Input placeholder="Pin Code" className="h-12 w-1/3" value={plot.pincode} onChange={e => setPlot({...plot, pincode: e.target.value})} />
+                     <div className="flex flex-col sm:flex-row gap-2">
+                        <Input placeholder="City Name" className="h-12 flex-1" value={plot.city} onChange={e => setPlot({...plot, city: e.target.value})} />
+                        <Input placeholder="Pin Code" className="h-12 w-full sm:w-1/3" value={plot.pincode} onChange={e => setPlot({...plot, pincode: e.target.value})} />
                      </div>
                   </div>
                   <div className="space-y-3">
@@ -831,7 +851,7 @@ ${result.reasoning.map((r: string) => `- ${r}`).join("\n")}
                                      <path d="M 50 10 L 90 30 L 90 70 L 50 90 L 10 70 L 10 30 Z" fill="currentColor" opacity="0.1" stroke="currentColor" strokeWidth="1" />
                                      <path d="M 50 10 L 50 90" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
                                      <path d="M 10 30 L 50 50 L 90 30" stroke="currentColor" strokeWidth="0.5" opacity="0.3" strokeDasharray="1,1" />
-                                     <text x="50" y="55" fontSize="8" textAnchor="middle" fill="currentColor" fontWeight="bold">G+{plot.floors-1}</text>
+                                     <text x="50" y="55" fontSize="8" textAnchor="middle" fill="currentColor" fontWeight="bold">G+{parseInt(plot.floors || "1") - 1}</text>
                                   </svg>
                                </div>
                             </div>

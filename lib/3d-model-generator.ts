@@ -164,7 +164,7 @@ export class ThreeDModelGenerator {
 
     // Enable physically correct lighting if PBR is enabled
     if (inputs.enablePBR) {
-      this.renderer.physicallyCorrectLights = true
+      ;(this.renderer as any).physicallyCorrectLights = true
     }
 
     this.setupScene()
@@ -1200,7 +1200,7 @@ export class ThreeDModelGenerator {
           const { geometry, material, position, rotation, scale } = data
 
           const positionAttr = geometry.attributes.position
-          const positions = Array.from(positionAttr.array)
+          const positions: number[] = Array.from(positionAttr.array as ArrayLike<number>)
 
           gltf.meshes.push({
             name: `Mesh_${index}`,
@@ -1238,7 +1238,7 @@ export class ThreeDModelGenerator {
 
         const allPositions: number[] = []
         meshesData.forEach((data) => {
-          const positions = Array.from(data.geometry.attributes.position.array)
+          const positions: number[] = Array.from(data.geometry.attributes.position.array as ArrayLike<number>)
           allPositions.push(...positions)
         })
 

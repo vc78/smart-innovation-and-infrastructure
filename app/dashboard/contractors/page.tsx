@@ -157,7 +157,7 @@ export default function ContractorsPage() {
         <div className="container mx-auto px-4 py-8">
           {/* Search and Filters */}
           <div className="mb-8">
-            <div className="flex gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -167,14 +167,14 @@ export default function ContractorsPage() {
                   className="pl-10"
                 />
               </div>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </Button>
             </div>
 
             {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
               {categories.map((category) => (
                 <Button
                   key={category}
@@ -203,7 +203,7 @@ export default function ContractorsPage() {
           </div>
 
           {/* Contractors Grid */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {filteredContractors.map((contractor) => (
               <Card key={contractor.id} className="p-6 border-border hover:shadow-lg transition-shadow">
                 <div className="flex gap-4 mb-4">
@@ -224,7 +224,7 @@ export default function ContractorsPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-lg font-semibold">{contractor.name}</h3>
                           {contractor.verified && (
-                            <CheckCircle2 className="w-5 h-5 text-primary" title="Verified Contractor" />
+                            <CheckCircle2 className="w-5 h-5 text-primary" />
                           )}
                         </div>
                         <Badge variant="secondary" className="text-xs">

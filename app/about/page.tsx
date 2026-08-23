@@ -1,21 +1,13 @@
 import Link from "next/link"
-import { ArrowLeft, Target, Users, Lightbulb, Award, Zap, Shield, Cpu, Globe, Rocket, CheckCircle2, TrendingUp, Briefcase } from "lucide-react"
+import { ArrowLeft, Cpu, Globe, Zap, Shield, Rocket, CheckCircle2, TrendingUp, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import OptimizedImage from "@/components/optimized-image"
+import { PLATFORM_STATS } from "@/lib/stats-config"
 
 export default function AboutPage() {
-  const REAL_METRICS = {
-    projectsInitiated:     24,    
-    verifiedContractors:   32,    
-    satisfactionRate:      96,    
-    surveySampleSize:      18,    
-    yearsOperating:        1,     
-  };
-  
-  const ACTIVE_CITIES = ['Hyderabad', 'Vijayawada', 'Warangal', 'Secunderabad'];
-  const EXPANSION_TARGET = { citiesBy2027: 15, region: 'South India' };
+  const { projectsInitiated, verifiedContractors, satisfactionRate, surveySampleSize, activeCities } = PLATFORM_STATS
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,7 +31,7 @@ export default function AboutPage() {
       </header>
 
       <main className="pb-32">
-        {/* HERO SECTION: THE NEURAL ORIGIN */}
+        {/* HERO SECTION */}
         <div className="relative pt-20 pb-32 overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64" />
           <div className="container mx-auto px-4 text-center relative z-10">
@@ -50,7 +42,7 @@ export default function AboutPage() {
                Architecting the <br /> <span className="text-primary">Intelligence</span> Age
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium">
-               We don't just build structures; we synthesize environments. SIID is a neural bridge between your vision and physical reality.
+               Connecting architectural vision with engineering execution. SIID provides parametric floor plans, real-time cost estimation, and a verified contractor network.
             </p>
           </div>
         </div>
@@ -62,25 +54,25 @@ export default function AboutPage() {
                 { 
                   icon: <Cpu className="w-8 h-8" />, 
                   title: "Parametric Estimation", 
-                  desc: "City-specific material and labor rates updated quarterly. Includes GST, approvals, and site development.",
+                  desc: "City-specific material and labor rates updated quarterly. Includes GST, approvals, and site development calculations.",
                   color: "bg-blue-500/10 text-blue-600"
                 },
                 { 
                   icon: <Globe className="w-8 h-8" />, 
                   title: "Verified Network", 
-                  desc: `${REAL_METRICS.verifiedContractors}+ contractors across ${ACTIVE_CITIES.length} cities, vetted through identity, GST, portfolio, and references.`,
+                  desc: `${verifiedContractors}+ contractors across ${activeCities.length} cities, vetted through identity, GST, portfolio, and references.`,
                   color: "bg-emerald-500/10 text-emerald-600"
                 },
                 { 
                   icon: <Zap className="w-8 h-8" />, 
                   title: "Vastu-Aware Layouts", 
-                  desc: "Design generation considers standard Vastu Shastra principles as a soft guide for room placement and orientation.",
+                  desc: "Generative layout design considers standard Vastu Shastra principles as a soft guide for spatial placement.",
                   color: "bg-amber-500/10 text-amber-600"
                 },
                 { 
                   icon: <Shield className="w-8 h-8" />, 
                   title: "Secure Project Data", 
-                  desc: "Secure cloud-hosted project data with role-based access for seamless team collaboration.",
+                  desc: "Enterprise-ready cloud storage with role-based permissions for seamless client and team collaboration.",
                   color: "bg-primary/10 text-primary"
                 }
               ].map((pillar, i) => (
@@ -97,7 +89,7 @@ export default function AboutPage() {
            </div>
         </section>
 
-        {/* THE MISSION: GLASSMORPHIC BREAKOUT */}
+        {/* PROGRESS SECTION */}
         <section className="container mx-auto px-4 mb-32">
            <div className="bg-slate-900 rounded-[3rem] p-12 md:p-20 relative overflow-hidden text-white">
               <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[150px] -mr-48 -mt-48" />
@@ -106,26 +98,26 @@ export default function AboutPage() {
                     <div className="space-y-4">
                        <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">Our Progress So Far</h2>
                        <p className="text-slate-400 text-lg leading-relaxed">
-                          SIID is in its growth phase, actively onboarding architecture teams and contractors across Telangana and Andhra Pradesh. We're committed to making construction transparent and intelligent.
+                          SIID is actively onboarding architecture teams and verified contractors across Telangana and Andhra Pradesh to bring transparency to residential and commercial construction.
                        </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="space-y-2">
-                          <h4 className="text-3xl font-black text-primary tracking-tighter">{REAL_METRICS.satisfactionRate}%</h4>
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Satisfaction ({REAL_METRICS.surveySampleSize} surveys)</p>
+                          <h4 className="text-3xl font-black text-primary tracking-tighter">{satisfactionRate}%</h4>
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Satisfaction ({surveySampleSize} surveys)</p>
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-3xl font-black text-primary tracking-tighter">{ACTIVE_CITIES.length}</h4>
+                          <h4 className="text-3xl font-black text-primary tracking-tighter">{activeCities.length}</h4>
                           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Cities</p>
                        </div>
                     </div>
                  </div>
                  <div className="space-y-6">
                     {[
-                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Automated Blueprint Generation in < 60 Seconds" },
+                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Automated Blueprint Generation & Estimations" },
                       { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Real-time Material Market Price Synchronization" },
-                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Proprietary Vastu Intelligence Integration" },
-                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Direct-to-Contractor Procurement Channels" }
+                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Proprietary Vastu Rules Integration" },
+                      { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Direct Contractor Connection & Verification" }
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-default">
                          {item.icon}
@@ -137,14 +129,14 @@ export default function AboutPage() {
            </div>
         </section>
 
-        {/* REAL-TIME STATS: INTERACTIVE FEEL */}
+        {/* REAL-TIME STATS */}
         <section className="container mx-auto px-4 mb-32">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                { label: "Projects Initiated", value: `${REAL_METRICS.projectsInitiated}+`, icon: <Rocket className="w-5 h-5" /> },
-                { label: "Active Cities", value: `${ACTIVE_CITIES.length}`, icon: <Globe className="w-5 h-5" /> },
-                { label: "Verified Contractors", value: `${REAL_METRICS.verifiedContractors}+`, icon: <Briefcase className="w-5 h-5" /> },
-                { label: `Goal: ${EXPANSION_TARGET.region}`, value: `${EXPANSION_TARGET.citiesBy2027} Cities`, icon: <TrendingUp className="w-5 h-5" /> }
+                { label: "Projects Initiated", value: `${projectsInitiated}+`, icon: <Rocket className="w-5 h-5" /> },
+                { label: "Active Cities", value: `${activeCities.length}`, icon: <Globe className="w-5 h-5" /> },
+                { label: "Verified Contractors", value: `${verifiedContractors}+`, icon: <Briefcase className="w-5 h-5" /> },
+                { label: "Client Satisfaction", value: `${satisfactionRate}%`, icon: <TrendingUp className="w-5 h-5" /> }
               ].map((stat, i) => (
                 <div key={i} className="space-y-2 group cursor-default">
                    <div className="mx-auto p-3 bg-muted rounded-full w-fit group-hover:bg-primary/10 group-hover:text-primary transition-all duration-300">
@@ -157,21 +149,20 @@ export default function AboutPage() {
            </div>
         </section>
 
-        {/* THE FINAL PITCH: ACTION CTA */}
+        {/* FINAL CTA */}
         <section className="container mx-auto px-4">
            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-[3.5rem] p-16 md:p-24 text-center text-primary-foreground shadow-3xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none" />
               <div className="relative z-10 max-w-3xl mx-auto space-y-10">
                  <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">
-                    Ready to build your <br /> future legacy?
+                    Ready to build your <br /> dream project?
                  </h2>
                  <p className="text-xl opacity-90 font-medium">
-                    Stop guessing. Start architecting with the power of SIID Intelligence.
+                    Start architecting with the power of SIID Construction Intelligence.
                  </p>
                  <div className="flex flex-col sm:flex-row gap-6 justify-center">
                     <Link href="/projects/create">
                        <Button size="lg" className="h-16 px-12 bg-white text-primary hover:bg-slate-100 font-black rounded-2xl text-lg shadow-xl shadow-white/10">
-                          Launch New Project
+                          Launch Interactive Estimator
                        </Button>
                     </Link>
                     <Link href="/contact">

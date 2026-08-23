@@ -290,7 +290,7 @@ How can I support your project today?`,
     if (sync) {
       try {
         const { text } = await generateText({
-          model: requestedModel,
+          model: requestedModel as any,
           system,
           messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
           temperature: 0.6,
@@ -331,7 +331,7 @@ How can I support your project today?`,
 
     try {
       const result = await streamText({
-        model: requestedModel,
+        model: requestedModel as any,
         system,
         messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
         temperature: 0.6,

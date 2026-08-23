@@ -531,10 +531,9 @@ export function DocumentManager() {
 
   const handleShare = async (doc: Document) => {
     const success = await shareDocument({
-      id: doc.id,
-      name: doc.name,
-      type: doc.type,
-      url: doc.url,
+      title: doc.name,
+      text: `Document: ${doc.name}`,
+      url: doc.url || window.location.href,
     })
 
     if (success) {
@@ -783,7 +782,7 @@ export function DocumentManager() {
                                 <Download className="w-4 h-4 mr-2" /> Download
                               </DropdownMenuItem>
                               <DropdownMenuItem className="cursor-pointer" onClick={() => handleShare(doc)}>
-                                <ShareButton data={{ url: doc.url || "", title: doc.name }} showText={true} className="w-full justify-start p-0 h-auto font-normal" variant="ghost" />
+                                <ShareButton data={{ url: doc.url || "", title: doc.name, text: doc.name }} showText={true} className="w-full justify-start p-0 h-auto font-normal" variant="ghost" />
                               </DropdownMenuItem>
                               {!MOCK_DOCUMENTS.find((m) => m.id === doc.id) && (
                                 <>

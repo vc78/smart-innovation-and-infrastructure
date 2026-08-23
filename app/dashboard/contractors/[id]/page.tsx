@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast"
 
 export default function ContractorProfilePage() {
   const [messageDialogOpen, setMessageDialogOpen] = useState(false)
+  const [messageText, setMessageText] = useState("")
   const [consultationDialogOpen, setConsultationDialogOpen] = useState(false)
   const [reviewText, setReviewText] = useState("")
   const { toast } = useToast()
@@ -219,7 +220,7 @@ export default function ContractorProfilePage() {
                         <div className="flex items-center gap-2 mb-2">
                           <h1 className="text-3xl font-bold">{contractor.name}</h1>
                           {contractor.verified && (
-                            <CheckCircle2 className="w-6 h-6 text-primary" title="Verified Contractor" />
+                            <CheckCircle2 className="w-6 h-6 text-primary" />
                           )}
                         </div>
                         <Badge variant="secondary" className="mb-3">
@@ -339,7 +340,7 @@ export default function ContractorProfilePage() {
                         </div>
                       </div>
                       <p className="text-muted-foreground leading-relaxed mb-2">{review.comment}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(review.at).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(review.date).toLocaleDateString()}</p>
                     </Card>
                   ))}
                 </div>
@@ -363,8 +364,8 @@ export default function ContractorProfilePage() {
                     <Textarea
                       id="message"
                       placeholder="Describe your project and requirements..."
-                      value={messageDialogOpen}
-                      onChange={(e) => setMessageDialogOpen(e.target.value)}
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
                       rows={4}
                     />
                   </div>

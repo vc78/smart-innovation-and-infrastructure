@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { CONTACT_INFO } from "@/lib/contact-config"
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false)
@@ -65,8 +66,8 @@ export default function ContactPage() {
               </div>
               <h3 className="font-semibold mb-2">Email Us</h3>
               <p className="text-sm text-muted-foreground mb-2">Our team is here to help</p>
-              <a href="mailto:venkatbodduluri78@gmail.com" className="text-primary hover:underline text-sm">
-                venkatbodduluri78@gmail.com
+              <a href={`mailto:${CONTACT_INFO.email}`} className="text-primary hover:underline text-sm font-semibold">
+                {CONTACT_INFO.email}
               </a>
             </Card>
 
@@ -76,9 +77,9 @@ export default function ContactPage() {
                 <Phone className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Call Us</h3>
-              <p className="text-sm text-muted-foreground mb-2">Mon-Fri from 9am to 6pm</p>
-              <a href="tel:+919032306961" className="text-primary hover:underline text-sm">
-                +91 90323 06961
+              <p className="text-sm text-muted-foreground mb-2">Mon-Sat from 9am to 6pm</p>
+              <a href={`tel:${CONTACT_INFO.phone}`} className="text-primary hover:underline text-sm font-semibold">
+                {CONTACT_INFO.phone}
               </a>
             </Card>
 

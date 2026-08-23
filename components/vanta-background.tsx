@@ -30,10 +30,13 @@ export default function VantaBackground({
 
         let VANTA: any
         if (effect === "fog") {
+          // @ts-expect-error - vanta modules lack types
           VANTA = (await import("vanta/dist/vanta.fog.min.js")).default
         } else if (effect === "net") {
+          // @ts-expect-error - vanta modules lack types
           VANTA = (await import("vanta/dist/vanta.net.min.js")).default
         } else {
+          // @ts-expect-error - vanta modules lack types
           VANTA = (await import("vanta/dist/vanta.waves.min.js")).default
         }
 

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
+import { KPI_COUNTER_ITEMS } from "@/lib/stats-config"
 
 type Kpi = { label: string; value: number; suffix?: string; prefix?: string }
 
-// Custom hook to detect when component is visible
 function useInViewOnce<T extends HTMLElement>() {
   const ref = useRef<T | null>(null)
   const [inView, setInView] = useState(false)
@@ -23,44 +23,44 @@ function useInViewOnce<T extends HTMLElement>() {
           }
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.05 }
     )
     io.observe(el)
-    return () => io.disconnect()
+    
+    // Fallback timer to ensure numbers animate even if IO event is delayed/missed
+    const fallbackTimer = setTimeout(() => {
+      setInView(true)
+    }, 150)
+
+    return () => {
+      io.disconnect()
+      clearTimeout(fallbackTimer)
+    }
   }, [])
 
   return { ref, inView }
 }
 
-// Ease-out exponential function for professional number counting
 const easeOutExpo = (t: number) => {
   return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
 }
 
 export default function KpiCounters({
-  items = [
-    { label: "Projects Completed", value: 12, suffix: "+" },
-    { label: "Happy Clients", value: 8, suffix: "+" },
-    { label: "Verified Contractors", value: 25, suffix: "+" },
-    { label: "Satisfaction Rate", value: 96, suffix: "%" },
-  ],
+  items = KPI_COUNTER_ITEMS,
 }: { items?: Kpi[] }) {
   const { ref, inView } = useInViewOnce<HTMLDivElement>()
   const [progress, setProgress] = useState(0)
 
-  // Number counting animation
   useEffect(() => {
     if (!inView) return
 
     let animationFrame: number
-    const duration = 2000 // 2 seconds for a premium feel
+    const duration = 1800
     const startTime = performance.now()
 
     const animateCount = (currentTime: number) => {
       const elapsedTime = currentTime - startTime
       const timeFraction = Math.min(elapsedTime / duration, 1)
-      
-      // Apply easing function here
       const easedProgress = easeOutExpo(timeFraction)
       setProgress(easedProgress)
 
@@ -75,14 +75,14 @@ export default function KpiCounters({
 
   return (
     <div className="relative py-12" ref={ref}>
-      {/* Background glowing effects specifically contained to this section */}
       <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto relative z-10 px-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto relative z-10 px-4">
         {items.map((k, i) => {
-          const currentVal = Math.floor(k.value * progress)
-          
+          // If inView has not fired yet, show current base value rather than 0
+          const currentVal = inView ? Math.floor(k.value * progress) : k.value
+
           return (
             <div
               key={i}
@@ -90,11 +90,10 @@ export default function KpiCounters({
                 "relative group flex flex-col items-center text-center p-6 md:p-8 rounded-2xl",
                 "bg-background/40 backdrop-blur-sm border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]",
                 "transition-all duration-500 ease-out hover:-translate-y-3 hover:bg-background/80 hover:shadow-xl hover:border-primary/20",
-                !inView ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
+                "opacity-100 translate-y-0"
               )}
               style={{ transitionDelay: `${i * 100}ms` }}
             >
-              {/* Subtle hover gradient ring inside card */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               <div className="relative z-10">

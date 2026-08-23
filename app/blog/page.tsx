@@ -1,90 +1,18 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowLeft, Calendar, User, ArrowRight } from "lucide-react"
+import { ArrowLeft, Calendar, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import OptimizedImage from "@/components/optimized-image"
 import BlogListClient from "@/components/blog-list-client"
-
-export const metadata = {
-  title: "SIID Blog",
-  description: "Insights, tips, and stories about design, construction, and building your dreams",
-}
+import { BLOG_POSTS } from "@/lib/blog-data"
 
 export default function BlogPage() {
-  const posts = [
-    {
-      id: 1,
-      title: "10 Tips for Planning Your Dream Home",
-      excerpt: "Essential considerations before starting your home design project, from budget to lifestyle needs.",
-      author: "Sarah Johnson",
-      authorRole: "Lead Architect",
-      date: "Jan 15, 2025",
-      category: "Design Tips",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80",
-      readingTime: "5 min",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Neural Architecture: How AI is Reshaping Spaces",
-      excerpt: "Beyond floor plans—how generative AI is creating hyper-personalized living environments that adapt to human emotion.",
-      author: "Michael Chen",
-      authorRole: "AI Research Lead",
-      date: "Jan 10, 2025",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80",
-      readingTime: "8 min",
-    },
-    {
-      id: 3,
-      title: "The Future of Smart Cities: 2025 and Beyond",
-      excerpt: "How construction intelligence is paving the way for integrated, self-sustaining urban ecosystems.",
-      author: "Priya Sharma",
-      authorRole: "Urban Planner",
-      date: "Jan 5, 2025",
-      category: "Sustainability",
-      image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80",
-      readingTime: "12 min",
-    },
-    {
-      id: 4,
-      title: "Sustainable Building Materials for the Next Decade",
-      excerpt: "From mushroom bricks to transparent wood—exploring the cutting-edge of eco-friendly construction.",
-      author: "David Kumar",
-      authorRole: "Material Scientist",
-      date: "Dec 28, 2024",
-      category: "Sustainability",
-      image: "https://images.unsplash.com/photo-1518005020250-68594b8152e0?auto=format&fit=crop&q=80",
-      readingTime: "7 min",
-    },
-    {
-      id: 5,
-      title: "Zero-Carbon Concrete: The Holy Grail of Building",
-      excerpt: "How structural engineers are finally solving the cement industry's massive carbon footprint.",
-      author: "Lisa Anderson",
-      authorRole: "Structural Engineer",
-      date: "Dec 20, 2024",
-      category: "Engineering",
-      image: "https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&q=80",
-      readingTime: "10 min",
-    },
-    {
-      id: 6,
-      title: "Quantum Simulations in Structural Stress Testing",
-      excerpt: "A deep dive into how quantum computing is making skyscrapers safer than ever before.",
-      author: "Raj Patel",
-      authorRole: "Computational Physicist",
-      date: "Dec 15, 2024",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
-      readingTime: "15 min",
-    },
-  ]
-
-  const featuredPost = posts.find(p => p.featured) || posts[0]
-  const otherPosts = posts.filter(p => p.id !== featuredPost.id)
-
+  const posts = BLOG_POSTS
+  const featuredPost = posts.find((p) => p.featured) || posts[0]
+  const otherPosts = posts.filter((p) => p.id !== featuredPost.id)
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,49 +43,51 @@ export default function BlogPage() {
             </Badge>
             <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight">Future of Living</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Where construction meets intelligence. Exploring the boundary between architectural art and neural engineering.
+              Where construction meets intelligence. Exploring the boundary between architectural art and smart engineering.
             </p>
           </div>
 
           {/* Featured Post */}
           <div className="mb-20">
-             <Card className="overflow-hidden border-none shadow-2xl group cursor-pointer bg-slate-900 text-white rounded-[2.5rem]">
-                <div className="grid lg:grid-cols-2">
-                   <div className="aspect-[16/10] lg:aspect-auto overflow-hidden">
-                      <img 
-                        src={featuredPost.image} 
-                        alt={featuredPost.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                      />
-                   </div>
-                   <div className="p-10 lg:p-16 flex flex-col justify-center space-y-6">
-                      <Badge className="w-fit bg-primary text-primary-foreground font-black px-4 py-1 rounded-full uppercase tracking-wider text-[10px]">
-                         {featuredPost.category}
-                      </Badge>
-                      <h2 className="text-4xl lg:text-5xl font-black leading-tight group-hover:text-primary transition-colors">
-                         {featuredPost.title}
-                      </h2>
-                      <p className="text-lg text-slate-300 leading-relaxed">
-                         {featuredPost.excerpt}
-                      </p>
-                      <div className="flex items-center gap-6 pt-6 border-t border-white/10">
-                         <div className="flex items-center gap-3">
-                             <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs uppercase border border-white/20 flex-shrink-0">
-                                {featuredPost.author.split(' ').map(n => n[0]).join('')}
-                             </div>
-                             <div className="flex flex-col">
-                                <span className="text-sm font-bold">{featuredPost.author}</span>
-                                <span className="text-xs text-slate-400">{featuredPost.authorRole}</span>
-                             </div>
-                         </div>
-                         <div className="flex items-center gap-2 text-slate-400 text-sm">
-                            <Calendar className="w-4 h-4" />
-                            {featuredPost.date}
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </Card>
+             <Link href={`/blog/${featuredPost.slug}`}>
+               <Card className="overflow-hidden border-none shadow-2xl group cursor-pointer bg-slate-900 text-white rounded-[2.5rem] hover:scale-[1.01] transition-transform duration-500">
+                  <div className="grid lg:grid-cols-2">
+                     <div className="aspect-[16/10] lg:aspect-auto overflow-hidden">
+                        <img 
+                          src={featuredPost.image} 
+                          alt={featuredPost.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                        />
+                     </div>
+                     <div className="p-10 lg:p-16 flex flex-col justify-center space-y-6">
+                        <Badge className="w-fit bg-primary text-primary-foreground font-black px-4 py-1 rounded-full uppercase tracking-wider text-[10px]">
+                           {featuredPost.category}
+                        </Badge>
+                        <h2 className="text-4xl lg:text-5xl font-black leading-tight group-hover:text-primary transition-colors">
+                           {featuredPost.title}
+                        </h2>
+                        <p className="text-lg text-slate-300 leading-relaxed">
+                           {featuredPost.excerpt}
+                        </p>
+                        <div className="flex items-center gap-6 pt-6 border-t border-white/10">
+                           <div className="flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs uppercase border border-white/20 flex-shrink-0">
+                                  {featuredPost.author.split(' ').map(n => n[0]).join('')}
+                               </div>
+                               <div className="flex flex-col">
+                                  <span className="text-sm font-bold">{featuredPost.author}</span>
+                                  <span className="text-xs text-slate-400">{featuredPost.authorRole}</span>
+                               </div>
+                           </div>
+                           <div className="flex items-center gap-2 text-slate-400 text-sm">
+                              <Calendar className="w-4 h-4" />
+                              {featuredPost.date}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </Card>
+             </Link>
           </div>
 
           <BlogListClient posts={otherPosts} />
@@ -168,12 +98,10 @@ export default function BlogPage() {
              <div className="relative z-10 space-y-8 max-w-2xl mx-auto">
                 <h3 className="text-4xl md:text-5xl font-black tracking-tight">Stay Ahead of the Curve</h3>
                 <p className="text-lg opacity-80 leading-relaxed">
-                   Join 5,000+ architects and homeowners receiving our weekly intelligence digest.
+                   Join 5,000+ architects and builders receiving our weekly construction intelligence digest.
                 </p>
                 <form 
-                   action="https://mailchimp.com" 
-                   method="POST" 
-                   target="_blank"
+                   onSubmit={(e) => e.preventDefault()}
                    className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
                 >
                    <input 
@@ -191,7 +119,6 @@ export default function BlogPage() {
           </div>
         </div>
       </main>
-
     </div>
   )
 }

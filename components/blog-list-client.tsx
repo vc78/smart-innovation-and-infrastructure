@@ -6,10 +6,10 @@ import { ArrowRight, Calendar, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import OptimizedImage from "@/components/optimized-image"
 
 type Post = {
     id: number
+    slug?: string
     title: string
     excerpt: string
     author: string
@@ -19,7 +19,6 @@ type Post = {
     image?: string
     readingTime?: string
 }
-
 
 export default function BlogListClient({ posts }: { posts: Post[] }) {
     const PAGE = 6
@@ -37,7 +36,6 @@ export default function BlogListClient({ posts }: { posts: Post[] }) {
     })
 
     const handleLoadMore = () => setVisibleCount((v) => Math.min(filteredPosts.length, v + PAGE))
-
 
     return (
         <div className="space-y-12">
@@ -70,53 +68,58 @@ export default function BlogListClient({ posts }: { posts: Post[] }) {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {filteredPosts.slice(0, visibleCount).map((post) => (
-                    <Card key={post.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 group cursor-pointer flex flex-col h-full bg-card rounded-[2rem]">
-                        <div className="aspect-[4/3] relative overflow-hidden">
-                            <img
-                                src={post.image || "/images/modern-villa-project.jpg"}
-                                alt={post.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-slate-900 border-none font-black text-[9px] uppercase tracking-wider px-3 py-1">
-                                {post.category}
-                            </Badge>
-                            {post.readingTime && (
-                                <div className="absolute bottom-4 left-4 flex items-center gap-1 text-white text-[10px] font-bold">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    {post.readingTime} read
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="p-8 flex flex-col flex-1 space-y-4">
-                            <h3 className="text-2xl font-black leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                                {post.title}
-                            </h3>
-
-                            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                                {post.excerpt}
-                            </p>
-
-                            <div className="pt-6 mt-auto border-t border-border flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold border border-primary/20 flex-shrink-0">
-                                        {post.author.split(' ').map(n => n[0]).join('')}
+                {filteredPosts.slice(0, visibleCount).map((post) => {
+                    const postUrl = post.slug ? `/blog/${post.slug}` : `/blog`
+                    return (
+                      <Link key={post.id} href={postUrl} className="block h-full">
+                        <Card className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 group cursor-pointer flex flex-col h-full bg-card rounded-[2rem]">
+                            <div className="aspect-[4/3] relative overflow-hidden">
+                                <img
+                                    src={post.image || "/images/modern-villa-project.jpg"}
+                                    alt={post.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-slate-900 border-none font-black text-[9px] uppercase tracking-wider px-3 py-1">
+                                    {post.category}
+                                </Badge>
+                                {post.readingTime && (
+                                    <div className="absolute bottom-4 left-4 flex items-center gap-1 text-white text-[10px] font-bold">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        {post.readingTime} read
                                     </div>
-                                    <div className="flex flex-col">
-                                        <p className="text-xs font-bold">{post.author}</p>
-                                        <p className="text-[9px] text-muted-foreground font-semibold">{post.authorRole}</p>
-                                        <p className="text-[10px] text-muted-foreground">{post.date}</p>
+                                )}
+                            </div>
+
+                            <div className="p-8 flex flex-col flex-1 space-y-4">
+                                <h3 className="text-2xl font-black leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                                    {post.title}
+                                </h3>
+
+                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                                    {post.excerpt}
+                                </p>
+
+                                <div className="pt-6 mt-auto border-t border-border flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold border border-primary/20 flex-shrink-0">
+                                            {post.author.split(' ').map(n => n[0]).join('')}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <p className="text-xs font-bold">{post.author}</p>
+                                            <p className="text-[9px] text-muted-foreground font-semibold">{post.authorRole}</p>
+                                            <p className="text-[10px] text-muted-foreground">{post.date}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                                    <ArrowRight className="w-4 h-4" />
+                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                                        <ArrowRight className="w-4 h-4" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </Card>
-                ))}
+                        </Card>
+                      </Link>
+                    )
+                })}
             </div>
 
             {filteredPosts.length === 0 && (
@@ -144,5 +147,4 @@ export default function BlogListClient({ posts }: { posts: Post[] }) {
             </div>
         </div>
     )
-
 }

@@ -228,7 +228,7 @@ function generateVisualAssets(projectData: any, designData: any, index: number, 
   return {
     architectural: {
       floorPlanImage: createUrl(`architectural blueprint floor plan for a ${floors}-story ${category} building, area ${area} sqft, ${orientation} facing, ${designData.style} style, internal layout showing ${PROJECT_CONTEXTS[category].spaces.join(", ")}, technical 2D drawing, professional architectural software output, black and white`, seed + 1),
-      renderingImage: createUrl(`hyper-realistic exterior 3D architectural rendering of a ${floors}-story ${designData.style} ${category} located in ${location}, ${clading} facade, beautiful landscaping, daylight, 8k resolution, architectural photography`, seed + 2),
+      renderingImage: createUrl(`hyper-realistic exterior 3D architectural rendering of a ${floors}-story ${designData.style} ${category} located in ${location}, ${cladding} facade, beautiful landscaping, daylight, 8k resolution, architectural photography`, seed + 2),
       description: `A ${designData.style} approach focusing on ${designData.architecturalFeatures.join(", ")}.`,
     },
     structural: {
