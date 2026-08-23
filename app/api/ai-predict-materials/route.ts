@@ -8,7 +8,7 @@ export async function POST(req: Request) {
       length = 40, width = 30, floors = 1, city = "Hyderabad", grade = "Standard", 
       direction = "North", soil = "Red Soil", cement = "OPC 43 (Standard)", steel = "TMT Fe415", 
       beds = "3", baths = "3", kitchenType = "Modular Island", archStyle = "Modern / Contemporary", 
-      amenities = [], compliances = [] 
+      amenities = [], compliances = [], maxBudget = 8000000 
     } = body || {}
 
     const plotArea = length * width
@@ -107,34 +107,36 @@ export async function POST(req: Request) {
     
     if (amenities.includes("smart_automation")) alerts.push("Smart automation selected: Ensure CAT6 cabling in slab rough-in.")
 
-    // 5. Response following the expected JSON structure
-    return NextResponse.json({
-      totalCost: Math.round(totalCost),
-      costPerSqFt: Math.round(totalCost / builtupArea),
-      builtUpArea: Math.round(builtupArea),
-      timeline: `${Math.max(12, Math.round(builtupArea / 100) + 6)} months`,
-      breakdown: {
-        foundation: Math.round(adjustedFoundationPart),
-        structure: Math.round(totalBaseCost * 0.35),
-        masonry: Math.round(totalBaseCost * 0.15),
-        mep: Math.round(totalBaseCost * 0.12),
-        flooring: Math.round(totalBaseCost * 0.08),
-        finishing: Math.round(totalBaseCost * 0.13),
-        amenities: totalAmenityCost,
-        compliance: totalComplianceCost,
-        site_development: Math.round(siteDevCost),
-        gst: Math.round(gstCost)
-      },
-      materials: {
-        cement: `${Math.round(cementBags).toLocaleString()} bags — ₹${Math.round(cementBags * cementPrice).toLocaleString()}`,
-        steel: `${Math.round(steelKg).toLocaleString()} kg — ₹${Math.round(steelKg * steelPrice).toLocaleString()}`,
-        sand: `${Math.round(sandCft).toLocaleString()} cft — ₹${Math.round(sandCft * 65).toLocaleString()}`,
-        bricks: `${Math.round(bricksCount).toLocaleString()} nos — ₹${Math.round(bricksCount * 9).toLocaleString()}`,
-        aggregate: `${Math.round(aggregateCft).toLocaleString()} cft — ₹${Math.round(aggregateCft * 45).toLocaleString()}`,
-        concrete: `${Math.round(builtupArea * 0.046).toLocaleString()} m³ — ₹${Math.round(builtupArea * 0.046 * 6500).toLocaleString()}`
-      },
-      alerts,
-      feasibility: totalCost < 8000000 ? "Within Budget" : "Slightly Over Budget",
+      const userMax = parseFloat(maxBudget) || 8000000
+      const feasibility = totalCost <= userMax ? "Within Budget" : totalCost <= userMax * 1.15 ? "Slightly Over Budget" : "Over Budget (Optimization Recommended)"
+
+      return NextResponse.json({
+        totalCost: Math.round(totalCost),
+        costPerSqFt: Math.round(totalCost / builtupArea),
+        builtUpArea: Math.round(builtupArea),
+        timeline: `${Math.max(12, Math.round(builtupArea / 100) + 6)} months`,
+        breakdown: {
+          foundation: Math.round(adjustedFoundationPart),
+          structure: Math.round(totalBaseCost * 0.35),
+          masonry: Math.round(totalBaseCost * 0.15),
+          mep: Math.round(totalBaseCost * 0.12),
+          flooring: Math.round(totalBaseCost * 0.08),
+          finishing: Math.round(totalBaseCost * 0.13),
+          amenities: totalAmenityCost,
+          compliance: totalComplianceCost,
+          site_development: Math.round(siteDevCost),
+          gst: Math.round(gstCost)
+        },
+        materials: {
+          cement: `${Math.round(cementBags).toLocaleString()} bags — ₹${Math.round(cementBags * cementPrice).toLocaleString()}`,
+          steel: `${Math.round(steelKg).toLocaleString()} kg — ₹${Math.round(steelKg * steelPrice).toLocaleString()}`,
+          sand: `${Math.round(sandCft).toLocaleString()} cft — ₹${Math.round(sandCft * 65).toLocaleString()}`,
+          bricks: `${Math.round(bricksCount).toLocaleString()} nos — ₹${Math.round(bricksCount * 9).toLocaleString()}`,
+          aggregate: `${Math.round(aggregateCft).toLocaleString()} cft — ₹${Math.round(aggregateCft * 45).toLocaleString()}`,
+          concrete: `${Math.round(builtupArea * 0.046).toLocaleString()} m³ — ₹${Math.round(builtupArea * 0.046 * 6500).toLocaleString()}`
+        },
+        alerts,
+        feasibility,
       vastu_score: compliances.includes("vastu") ? 87 : null,
       grade_note: `The ${grade} grade focuses on durable Indian brands and standard structural safety.`,
       location_note: `Seismic Zone: ${cityData?.seismic_zone || 'Unknown'}`

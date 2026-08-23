@@ -199,8 +199,8 @@ export async function POST(req: Request) {
         variants,
         summary: {
           totalVariants: variants.length,
-          bestVastu: variants.sort((a,b) => (b.vastuScore || 0) - (a.vastuScore || 0))[0].id,
-          mostEfficient: variants[0].id
+          bestVastu: [...variants].sort((a,b) => (b.vastuScore || 0) - (a.vastuScore || 0))[0]?.id || variants[0]?.id,
+          mostEfficient: variants[0]?.id
         }
       }
     })
