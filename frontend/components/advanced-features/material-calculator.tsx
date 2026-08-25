@@ -369,59 +369,69 @@ export function MaterialCalculator() {
           
           {/* Plot Details */}
           <section>
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-50 pb-2">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6 border-b border-slate-50 pb-2">
                <MapPin className="w-4 h-4 text-blue-500" />
-               <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-widest">01. Terrain & Layout</h3>
+               <h3 className="text-[12px] sm:text-[13px] font-black text-slate-400 uppercase tracking-widest">01. Terrain & Layout</h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
               <Field label="Length (ft)"><Input value={length} onChange={setLength} /></Field>
               <Field label="Width (ft)"><Input value={width} onChange={setWidth} /></Field>
-              <Field label="Total Plot Area">
-                <div className="h-[42px] rounded-xl border border-blue-100 bg-blue-50/30 flex items-center px-4 font-mono font-bold text-blue-600 text-sm">
-                  {plotArea.toLocaleString()} SQ FT
-                </div>
-              </Field>
+              <div className="col-span-2 sm:col-span-1">
+                <Field label="Total Plot Area">
+                  <div className="h-[42px] rounded-xl border border-blue-100 bg-blue-50/30 flex items-center px-4 font-mono font-bold text-blue-600 text-sm">
+                    {plotArea.toLocaleString()} SQ FT
+                  </div>
+                </Field>
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 mt-2 sm:mt-4">
               <Field label="City / Region"><Select value={city} onChange={setCity} options={["Hyderabad", "Vijayawada", "Warangal", "Secunderabad"]} /></Field>
               <Field label="Total Floors"><Input value={floors} onChange={setFloors} /></Field>
-              <Field label="Vastu Direction"><Select value={direction} onChange={setDirection} options={DIRECTIONS} /></Field>
+              <div className="col-span-2 sm:col-span-1">
+                <Field label="Vastu Direction"><Select value={direction} onChange={setDirection} options={DIRECTIONS} /></Field>
+              </div>
             </div>
-            <Field label="Geotechnical Soil Profile"><Select value={soil} onChange={setSoil} options={SOILS} /></Field>
+            <div className="mt-2 sm:mt-4">
+              <Field label="Geotechnical Soil Profile"><Select value={soil} onChange={setSoil} options={SOILS} /></Field>
+            </div>
           </section>
 
           {/* Construction Specs */}
           <section>
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-50 pb-2">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6 border-b border-slate-50 pb-2">
                <Box className="w-4 h-4 text-blue-500" />
-               <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-widest">02. Engineering Standards</h3>
+               <h3 className="text-[12px] sm:text-[13px] font-black text-slate-400 uppercase tracking-widest">02. Engineering Standards</h3>
             </div>
             <Field label="Project Grade Finish"><SelectBtn options={GRADES} value={grade} onChange={setGrade} /></Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-              <Field label="Primary Cement Specification"><Select value={cement} onChange={setCement} options={CEMENTS} /></Field>
-              <Field label="Structural Steel Rebar"><Select value={steel} onChange={setSteel} options={STEELS} /></Field>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-4 sm:mt-6">
+              <Field label="Cement Specification"><Select value={cement} onChange={setCement} options={CEMENTS} /></Field>
+              <Field label="Steel Rebar"><Select value={steel} onChange={setSteel} options={STEELS} /></Field>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Field label="Target Minimum Budget (₹)"><Input value={minBudget} onChange={setMinBudget} /></Field>
-              <Field label="Target Maximum Budget (₹)"><Input value={maxBudget} onChange={setMaxBudget} /></Field>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-2 sm:mt-4">
+              <Field label="Min Budget (₹)"><Input value={minBudget} onChange={setMinBudget} /></Field>
+              <Field label="Max Budget (₹)"><Input value={maxBudget} onChange={setMaxBudget} /></Field>
             </div>
           </section>
 
           {/* Lifestyle & Architecture */}
           <section>
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-50 pb-2">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6 border-b border-slate-50 pb-2">
                <Zap className="w-4 h-4 text-blue-500" />
-               <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-widest">03. Lifestyle Architecture</h3>
+               <h3 className="text-[12px] sm:text-[13px] font-black text-slate-400 uppercase tracking-widest">03. Lifestyle Architecture</h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
               <Field label="Beds"><Input value={beds} onChange={setBeds} /></Field>
               <Field label="Baths"><Input value={baths} onChange={setBaths} /></Field>
-              <Field label="Kitchen Style"><Select value={kitchenType} onChange={setKitchenType} options={KITCHEN_TYPES} /></Field>
+              <div className="col-span-2 sm:col-span-1">
+                <Field label="Kitchen Style"><Select value={kitchenType} onChange={setKitchenType} options={KITCHEN_TYPES} /></Field>
+              </div>
             </div>
-            <Field label="Architectural Design Language"><Select value={archStyle} onChange={setArchStyle} options={ARCH_STYLES} /></Field>
+            <div className="mt-2 sm:mt-4">
+              <Field label="Architectural Design Language"><Select value={archStyle} onChange={setArchStyle} options={ARCH_STYLES} /></Field>
+            </div>
             
             <Field label="Premium Amenities">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {AMENITIES.map(a => (
                   <Chip key={a.id} label={a.label} icon={a.icon} active={amenities.has(a.id)} onClick={() => toggleAmenity(a.id)} />
                 ))}
@@ -429,7 +439,7 @@ export function MaterialCalculator() {
             </Field>
 
             <Field label="Structural Compliances">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {COMPLIANCES.map(c => (
                   <Chip key={c.id} label={c.label} icon={c.icon} active={compliances.has(c.id)} onClick={() => toggleCompliance(c.id)} />
                 ))}
@@ -441,7 +451,7 @@ export function MaterialCalculator() {
             <button
               onClick={runEstimate}
               disabled={loading || !plotArea}
-              className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg shadow-xl shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-lg shadow-xl shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3"
             >
               {loading ? (<>Computing Intelligent Estimate <StreamingDots /></>) : "⚡ Generate AI Project Manifest"}
             </button>
@@ -450,16 +460,16 @@ export function MaterialCalculator() {
               <button
                 onClick={downloadProjectPDF}
                 disabled={downloadingPDF}
-                className="h-14 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-xl shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+                className="h-12 sm:h-14 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base shadow-xl shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {downloadingPDF ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Processing Document...</span>
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <span>Processing...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-5 h-5" />
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Download PDF</span>
                   </>
                 )}
@@ -469,42 +479,42 @@ export function MaterialCalculator() {
         </div>
 
         {/* RIGHT PANEL: RESULTS */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {!result && !loading && (
-            <div className="bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 p-12 text-center h-full flex flex-col items-center justify-center">
-              <div className="text-5xl mb-6 opacity-40">🏗️</div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Awaiting Input Parameters</h4>
-              <p className="text-sm text-slate-400 max-w-[200px]">Define your terrain and specs to see the AI breakdown.</p>
+            <div className="bg-slate-50 rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-slate-200 p-8 sm:p-12 text-center h-full flex flex-col items-center justify-center">
+              <div className="text-4xl sm:text-5xl mb-4 sm:mb-6 opacity-40">🏗️</div>
+              <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Awaiting Input Parameters</h4>
+              <p className="text-xs sm:text-sm text-slate-400 max-w-[200px]">Define your terrain and specs to see the AI breakdown.</p>
             </div>
           )}
 
           {loading && (
-            <div className="bg-white rounded-[2rem] border border-slate-100 p-10 text-center shadow-lg h-full flex flex-col items-center justify-center">
-               <div className="w-16 h-16 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-6" />
-               <h4 className="text-lg font-bold text-slate-900">AI Engine Running</h4>
-               <p className="text-sm text-slate-400 mt-2">Simulating {plotArea.toLocaleString()} sq ft build in {city}...</p>
+            <div className="bg-white rounded-2xl sm:rounded-[2rem] border border-slate-100 p-8 sm:p-10 text-center shadow-lg h-full flex flex-col items-center justify-center">
+               <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4 sm:mb-6" />
+               <h4 className="text-base sm:text-lg font-bold text-slate-900">AI Engine Running</h4>
+               <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">Simulating {plotArea.toLocaleString()} sq ft build in {city}...</p>
             </div>
           )}
 
           {result && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                {/* Main Cost Card */}
-               <div className="bg-slate-900 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden">
+               <div className="bg-slate-900 rounded-2xl sm:rounded-[2.5rem] p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-                  <div className="text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Total Project Investment</div>
-                  <div className="text-3xl sm:text-4xl font-black font-mono mb-2">{fmtL(result.totalCost)}</div>
-                  <div className="text-[10px] sm:text-xs text-slate-500 font-bold mb-6 sm:mb-8">
+                  <div className="text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 sm:mb-2">Total Project Investment</div>
+                  <div className="text-2xl sm:text-4xl font-black font-mono mb-1 sm:mb-2">{fmtL(result.totalCost)}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400 font-bold mb-4 sm:mb-8">
                     {fmt(result.costPerSqFt)} / sq ft · {result.builtUpArea} sq ft Built-up
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                     <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="text-[9px] text-slate-500 font-black uppercase mb-1">Timeline</div>
-                        <div className="text-sm font-bold">{result.timeline}</div>
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                     <div className="bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5">
+                        <div className="text-[8px] sm:text-[9px] text-slate-400 font-black uppercase mb-0.5 sm:mb-1">Timeline</div>
+                        <div className="text-xs sm:text-sm font-bold truncate">{result.timeline}</div>
                      </div>
-                     <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="text-[9px] text-slate-500 font-black uppercase mb-1">Status</div>
-                        <div className={`text-sm font-bold ${result.feasibility.includes("Over") ? "text-orange-400" : "text-emerald-400"}`}>
+                     <div className="bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5">
+                        <div className="text-[8px] sm:text-[9px] text-slate-400 font-black uppercase mb-0.5 sm:mb-1">Status</div>
+                        <div className={`text-xs sm:text-sm font-bold truncate ${result.feasibility.includes("Over") ? "text-orange-400" : "text-emerald-400"}`}>
                           {result.feasibility}
                         </div>
                      </div>
@@ -512,44 +522,44 @@ export function MaterialCalculator() {
                </div>
 
                {/* Breakdown List */}
-               <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Financial Breakdown</h4>
+               <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-4 sm:p-8 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-widest">Financial Breakdown</h4>
                     <BarChart3 className="w-4 h-4 text-blue-500" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 text-xs sm:text-sm">
                     {Object.entries(result.breakdown).map(([k, v]) => (
                       <CostRow key={k} label={k.replace(/_/g, " ").toUpperCase()} value={fmtL(v as number)} />
                     ))}
-                    <div className="pt-4 mt-2 border-t border-slate-100">
+                    <div className="pt-3 mt-2 border-t border-slate-100">
                       <CostRow label="TOTAL PROJECT VALUE" value={fmtL(result.totalCost)} highlight />
                     </div>
                   </div>
                </div>
 
-               {/* Material Detail */}
-               <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100">
-                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Material Quantities</h4>
-                  <div className="space-y-4">
+               {/* Material Detail - SIDE-BY-SIDE 2-COLUMN GRID ON MOBILE */}
+               <div className="bg-slate-50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-slate-100">
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-widest mb-4 sm:mb-6">Material Quantities</h4>
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     {Object.entries(result.materials).map(([k, v]) => (
-                      <div key={k} className="flex flex-col gap-1 border-b border-slate-200/50 pb-3 last:border-0">
-                         <span className="text-[10px] font-black text-slate-400 uppercase">{k}</span>
-                         <span className="text-sm font-bold text-slate-800 font-mono">{v as string}</span>
+                      <div key={k} className="p-2.5 sm:p-3 bg-white rounded-xl border border-slate-200/60 shadow-xs flex flex-col justify-between">
+                         <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase truncate">{k}</span>
+                         <span className="text-xs sm:text-sm font-bold text-slate-800 font-mono mt-1 break-words">{v as string}</span>
                       </div>
                     ))}
                   </div>
                </div>
 
                {/* AI Intelligence Tips */}
-               <div className="bg-blue-600 rounded-[2rem] p-8 text-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ShieldCheck className="w-5 h-5 text-blue-200" />
-                    <h4 className="text-xs font-black uppercase tracking-widest">AI Intelligence Tips</h4>
+               <div className="bg-blue-600 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 text-white">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-200" />
+                    <h4 className="text-[11px] sm:text-xs font-black uppercase tracking-widest">AI Intelligence Tips</h4>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {result.alerts.map((a: string, i: number) => (
-                      <div key={i} className="text-xs leading-relaxed opacity-90 flex gap-2">
-                        <span>•</span> {a}
+                      <div key={i} className="text-[11px] sm:text-xs leading-relaxed opacity-90 flex gap-1.5 sm:gap-2">
+                        <span className="text-blue-200">•</span> {a}
                       </div>
                     ))}
                   </div>

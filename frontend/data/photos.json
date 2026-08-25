@@ -283,5 +283,96 @@
       ],
       "description": "AI Analysis (YOLO v8): Interior Finishing detected with 25% completion. No significant hazards identified in current view."
     }
+  },
+  {
+    "id": "01af5f0b-4ae3-4487-9f2f-501c06144b27",
+    "url": "/uploads/1787660038352_images__5_.jpg",
+    "filename": "images (5).jpg",
+    "format": "jpg",
+    "uploadedAt": "2026-08-25T12:14:08.856Z",
+    "date": "2026-08-25",
+    "milestone": "Active Progress",
+    "tags": [
+      "Carpentry",
+      "Smart-Verified",
+      "Site Inspection",
+      "Compliance Checked"
+    ],
+    "location": {
+      "latitude": 17.50025799609202,
+      "longitude": 78.39391439587018,
+      "address": "Lat: 17.500258, Lng: 78.393914"
+    },
+    "comments": "",
+    "uploadedBy": "Bodduluri venkat chowdary",
+    "size": 51473,
+    "mlAnalysis": {
+      "progress": 60,
+      "phase": "Structural RCC Framing",
+      "confidenceScore": 95,
+      "safetyViolations": [
+        {
+          "type": "ppe_missing_helmet",
+          "description": "Hazard: Rebar dowels require protective plastic mushroom caps.",
+          "severity": "high",
+          "confidence": 0.94,
+          "box": {
+            "x": 25,
+            "y": 30,
+            "w": 25,
+            "h": 20
+          }
+        }
+      ],
+      "autoTags": [
+        "Smart-Verified",
+        "Site Inspection",
+        "Compliance Checked"
+      ],
+      "description": "Smart analysis completed with Gemini AI Engine."
+    }
+  },
+  {
+    "id": "624839db-a125-49f0-9153-32a048c1baf1",
+    "url": "/uploads/1787660195711_construction-workers-working-stockcake.jpg",
+    "filename": "construction-workers-working-stockcake.jpg",
+    "format": "jpg",
+    "uploadedAt": "2026-08-25T12:16:46.141Z",
+    "date": "2026-08-25",
+    "milestone": "Active Progress",
+    "tags": [
+      "Slab",
+      "Smart-Verified",
+      "Site Inspection",
+      "Compliance Checked"
+    ],
+    "comments": "",
+    "uploadedBy": "Bodduluri venkat chowdary",
+    "size": 124407,
+    "mlAnalysis": {
+      "progress": 60,
+      "phase": "Structural RCC Framing",
+      "confidenceScore": 95,
+      "safetyViolations": [
+        {
+          "type": "ppe_missing_helmet",
+          "description": "Hazard: Rebar dowels require protective plastic mushroom caps.",
+          "severity": "high",
+          "confidence": 0.94,
+          "box": {
+            "x": 25,
+            "y": 30,
+            "w": 25,
+            "h": 20
+          }
+        }
+      ],
+      "autoTags": [
+        "Smart-Verified",
+        "Site Inspection",
+        "Compliance Checked"
+      ],
+      "description": "Smart analysis completed with Gemini AI Engine."
+    }
   }
 ]

@@ -194,46 +194,47 @@ export default function MaterialCalculatorPage() {
             </div>
           </header>
 
-          <div className="grid md:grid-cols-3 gap-6">
-             <Card className="bg-slate-900 border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-2">
-                   <p className="text-sm text-slate-500 uppercase font-bold tracking-wider">Total Estimate</p>
-                   <TrendingUp className="w-5 h-5 text-emerald-500" />
+          {/* Top KPI Cards - Side by Side 2-Column Grid on Mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+             <Card className="bg-slate-900 border-slate-800 p-4 sm:p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                   <p className="text-[11px] sm:text-sm text-slate-500 uppercase font-bold tracking-wider truncate">Total Estimate</p>
+                   <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0" />
                 </div>
-                <p className="text-4xl font-bold text-white">₹9.2M<span className="text-sm font-normal text-slate-500 ml-2">± 2%</span></p>
+                <p className="text-2xl sm:text-4xl font-bold text-white tracking-tight">₹9.2M<span className="text-xs sm:text-sm font-normal text-slate-500 ml-1 sm:ml-2">± 2%</span></p>
              </Card>
-             <Card className="bg-slate-900 border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-2">
-                   <p className="text-sm text-slate-500 uppercase font-bold tracking-wider">Market Drift</p>
-                   <AlertCircle className="w-5 h-5 text-amber-500" />
+             <Card className="bg-slate-900 border-slate-800 p-4 sm:p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                   <p className="text-[11px] sm:text-sm text-slate-500 uppercase font-bold tracking-wider truncate">Market Drift</p>
+                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
                 </div>
-                <p className="text-4xl font-bold text-white">+4.2%<span className="text-sm font-normal text-slate-500 ml-2">last 30d</span></p>
+                <p className="text-2xl sm:text-4xl font-bold text-white tracking-tight">+4.2%<span className="text-xs sm:text-sm font-normal text-slate-500 ml-1 sm:ml-2">30d</span></p>
              </Card>
-             <Card className="bg-slate-900 border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-2">
-                   <p className="text-sm text-slate-500 uppercase font-bold tracking-wider">Optimization</p>
-                   <Zap className="w-5 h-5 text-blue-500" />
+             <Card className="bg-slate-900 border-slate-800 p-4 sm:p-6 rounded-xl col-span-2 md:col-span-1">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                   <p className="text-[11px] sm:text-sm text-slate-500 uppercase font-bold tracking-wider truncate">Optimization</p>
+                   <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
                 </div>
-                <p className="text-4xl font-bold text-white">12.5%<span className="text-sm font-normal text-slate-500 ml-2">savings</span></p>
+                <p className="text-2xl sm:text-4xl font-bold text-white tracking-tight">12.5%<span className="text-xs sm:text-sm font-normal text-slate-500 ml-1 sm:ml-2">savings</span></p>
              </Card>
           </div>
 
-          <Card className="bg-slate-900 border-slate-800">
-             <CardHeader className="border-b border-slate-800">
-                <CardTitle className="text-lg font-semibold text-white">Quantum Inventory Analysis</CardTitle>
+          <Card className="bg-slate-900 border-slate-800 rounded-xl overflow-hidden">
+             <CardHeader className="border-b border-slate-800 p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg font-semibold text-white">Quantum Inventory Analysis</CardTitle>
              </CardHeader>
              <CardContent className="p-0">
                 {materials.map((m, i) => (
-                  <div key={i} className="flex items-center p-6 border-b border-slate-800 last:border-0 hover:bg-slate-800/30 transition-colors">
-                     <div className={`w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center mr-6 ${m.color}`}>
-                        <m.icon className="w-6 h-6" />
+                  <div key={i} className="flex items-center p-3.5 sm:p-6 border-b border-slate-800 last:border-0 hover:bg-slate-800/30 transition-colors gap-3 sm:gap-6">
+                     <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-slate-950 flex items-center justify-center flex-shrink-0 ${m.color}`}>
+                        <m.icon className="w-4 h-4 sm:w-6 sm:h-6" />
                      </div>
-                     <div className="flex-1 space-y-2">
-                        <div className="flex justify-between items-center">
-                            <h3 className="font-bold text-white uppercase tracking-tight">{m.name}</h3>
-                            <span className="text-sm font-mono text-slate-400">{m.amount} | {m.cost}</span>
+                     <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
+                        <div className="flex justify-between items-center gap-2">
+                            <h3 className="font-bold text-white text-xs sm:text-sm uppercase tracking-tight truncate">{m.name}</h3>
+                            <span className="text-xs sm:text-sm font-mono text-slate-400 flex-shrink-0">{m.amount} | {m.cost}</span>
                         </div>
-                        <Progress value={m.progress} className="h-2 bg-slate-950" />
+                        <Progress value={m.progress} className="h-1.5 sm:h-2 bg-slate-950" />
                      </div>
                   </div>
                 ))}

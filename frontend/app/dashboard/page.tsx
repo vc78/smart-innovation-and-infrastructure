@@ -357,77 +357,80 @@ export default function DashboardPage() {
                       <QuickActions />
                     </div> */}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {/* STATS 2-COLUMN SIDE-BY-SIDE MOBILE GRID */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                       {stats.map((stat) => (
-                        <Card key={stat.label} className="p-6 border-border">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                              <p className="text-3xl font-bold">{stat.value}</p>
+                        <Card key={stat.label} className="p-3.5 sm:p-5 lg:p-6 border-border rounded-xl shadow-sm hover:shadow-md transition-all">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-[11px] sm:text-sm text-muted-foreground mb-0.5 sm:mb-1 truncate">{stat.label}</p>
+                              <p className="text-xl sm:text-3xl font-bold tracking-tight">{stat.value}</p>
                             </div>
                             <div
-                              className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center ${stat.color}`}
+                              className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-muted/80 flex items-center justify-center flex-shrink-0 ${stat.color}`}
                             >
-                              <stat.icon className="w-6 h-6" />
+                              <stat.icon className="w-4 h-4 sm:w-6 sm:h-6" />
                             </div>
                           </div>
                         </Card>
                       ))}
 
                       {/* Weather summary card */}
-                      <WeatherWidget location={(user as any)?.location || "Hyderabad"} />
+                      <div className="col-span-2 lg:col-span-4">
+                        <WeatherWidget location={(user as any)?.location || "Hyderabad"} />
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                      <Card className="p-6 border-border hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-accent/5">
-                        <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
-                            <Cube className="w-6 h-6 text-accent" />
+                    {/* FEATURE LAUNCH CARDS (SIDE-BY-SIDE ON SM+ AND COMPACT STACK ON MOBILE) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 mb-6 sm:mb-8">
+                      <Card className="p-4 sm:p-6 border-border hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl">
+                        <div className="flex items-start gap-3.5 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                            <Cube className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold mb-2">3D Model Generator</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Create rule-based 3D building models with interactive walkthrough and camera flyover
-                              features
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold mb-1 truncate">3D Architecture Studio</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">
+                              Synthesize 3D CAD building models with interactive walkthrough and flyovers.
                             </p>
                             <Link href="/3d-generator">
-                              <Button className="w-full bg-accent hover:bg-accent-dark text-white">
-                                Launch Generator
+                              <Button className="w-full bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm h-9 sm:h-10">
+                                Launch Studio
                               </Button>
                             </Link>
                           </div>
                         </div>
                       </Card>
 
-                      <Card className="p-6 border-border hover:shadow-lg transition-shadow">
-                        <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                            <Calculator className="w-6 h-6 text-primary" />
+                      <Card className="p-4 sm:p-6 border-border hover:shadow-lg transition-shadow rounded-xl">
+                        <div className="flex items-start gap-3.5 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold mb-2">Advanced Tools</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Access material calculators, budget estimators, and project planning tools
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold mb-1 truncate">Advanced Material Calc</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">
+                              Calculate live cement, steel, sand, aggregate BOQs with CPWD 2026 rates.
                             </p>
-                            <Button onClick={() => setActiveTab("tools")} variant="outline" className="w-full">
-                              View Tools
+                            <Button onClick={() => setActiveTab("material")} variant="outline" className="w-full text-xs sm:text-sm h-9 sm:h-10">
+                              Open Calculator
                             </Button>
                           </div>
                         </div>
                       </Card>
 
-                      <Card className="p-6 border-border hover:shadow-lg transition-shadow">
-                        <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                            <Calendar className="w-6 h-6 text-green-600" />
+                      <Card className="p-4 sm:p-6 border-border hover:shadow-lg transition-shadow rounded-xl sm:col-span-2 lg:col-span-1">
+                        <div className="flex items-start gap-3.5 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold mb-2">Timeline Management</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Track project phases, milestones, and deadlines with advanced analytics
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold mb-1 truncate">Timeline & Milestones</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">
+                              Track critical path phases, lookahead schedules, and smart-contract escrow releases.
                             </p>
-                            <Button onClick={() => setActiveTab("timeline")} variant="outline" className="w-full">
-                              View Timeline
+                            <Button onClick={() => setActiveTab("timeline")} variant="outline" className="w-full text-xs sm:text-sm h-9 sm:h-10">
+                              View Schedule
                             </Button>
                           </div>
                         </div>
@@ -517,65 +520,73 @@ export default function DashboardPage() {
               {activeTab === "projects" && (
                 <ErrorBoundary>
                   <>
-                    <div className="mb-8">
+                    <div className="mb-6 sm:mb-8">
                       <ComparisonView />
                     </div>
-                    <div className={viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+
+                    <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" : "space-y-4"}>
                       {activeProjectsList.map((project) => (
                         <Card
                           key={project.id}
-                          className={`overflow-hidden border-border hover:shadow-lg transition-shadow ${viewMode === "list" ? "flex flex-row" : ""
-                            }`}
+                          className={`overflow-hidden border-border hover:shadow-lg transition-all rounded-xl ${
+                            viewMode === "list" ? "flex flex-row" : "flex flex-col"
+                          }`}
                         >
-                          <img
-                            src={project.image || "/placeholder.svg?height=200&width=400&query=construction project"}
-                            alt={project.name}
-                            className={viewMode === "grid" ? "w-full h-48 object-cover" : "w-48 h-full object-cover"}
-                          />
-                          <div className="p-6 flex-1">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className="text-lg font-semibold mb-1">{project.name}</h3>
-                                <Badge
-                                  variant={
-                                    project.status === "Completed"
-                                      ? "secondary"
-                                      : project.status === "In Progress"
-                                        ? "default"
-                                        : "outline"
-                                  }
-                                >
-                                  {project.status}
-                                </Badge>
+                          <div className={viewMode === "grid" ? "w-full aspect-[4/3] sm:h-48 overflow-hidden bg-muted relative flex-shrink-0" : "w-36 sm:w-48 h-full overflow-hidden bg-muted relative flex-shrink-0"}>
+                            <img
+                              src={project.image || "https://images.unsplash.com/photo-1541888086225-ee5dc24bd4ab?auto=format&fit=crop&q=80&w=600"}
+                              alt={project.name}
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge
+                                variant={
+                                  project.status === "Completed"
+                                    ? "secondary"
+                                    : project.status === "In Progress"
+                                      ? "default"
+                                      : "outline"
+                                }
+                                className="text-[9px] sm:text-xs px-1.5 py-0.5 backdrop-blur-md bg-background/80"
+                              >
+                                {project.status}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h3 className="text-xs sm:text-base font-bold mb-1.5 truncate leading-tight">{project.name}</h3>
+
+                              <div className="space-y-2 mb-3">
+                                <div>
+                                  <div className="flex items-center justify-between text-[10px] sm:text-xs mb-1">
+                                    <span className="text-muted-foreground">Progress</span>
+                                    <span className="font-bold">{project.progress}%</span>
+                                  </div>
+                                  <Progress value={project.progress} className="h-1.5" />
+                                </div>
+
+                                <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                  <span className="text-muted-foreground">Budget</span>
+                                  <span className="font-semibold text-primary truncate">{project.budget}</span>
+                                </div>
+
+                                <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                  <span className="text-muted-foreground">Deadline</span>
+                                  <span className="font-medium text-muted-foreground truncate">{project.deadline}</span>
+                                </div>
                               </div>
                             </div>
 
-                            <div className="space-y-3 mb-4">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Progress</span>
-                                <span className="font-medium">{project.progress}%</span>
-                              </div>
-                              <Progress value={project.progress} className="h-2" />
-
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Budget</span>
-                                <span className="font-medium">{project.budget}</span>
-                              </div>
-
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Deadline</span>
-                                <span className="font-medium">{project.deadline}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                              <Link href={`/dashboard/projects/${project.id}`} className="flex-1">
-                                <Button variant="outline" className="w-full bg-transparent" size="sm">
-                                  View Design
+                            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 pt-2 border-t border-border/60">
+                              <Link href={`/dashboard/projects/${project.id}`}>
+                                <Button variant="outline" className="w-full text-[10px] sm:text-xs h-7 sm:h-8 px-1" size="sm">
+                                  Design
                                 </Button>
                               </Link>
-                              <Link href={`/dashboard/projects/${project.id}/manage`} className="flex-1">
-                                <Button className="w-full bg-accent hover:bg-accent-dark text-white" size="sm">
+                              <Link href={`/dashboard/projects/${project.id}/manage`}>
+                                <Button className="w-full bg-accent hover:bg-accent-dark text-white text-[10px] sm:text-xs h-7 sm:h-8 px-1" size="sm">
                                   Manage
                                 </Button>
                               </Link>

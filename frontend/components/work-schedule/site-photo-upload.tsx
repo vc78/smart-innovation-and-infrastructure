@@ -368,70 +368,65 @@ export function SitePhotoUpload({ taskId, taskName, milestone, onPhotoUploaded }
             {filteredPhotos.map((photo) => (
               <div
                 key={photo.id}
-                className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+                className="group relative aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer border border-border shadow-xs hover:shadow-md transition-all"
                 onClick={() => setSelectedPhoto(photo)}
               >
-                  <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                  <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 max-w-[80%]">
                     {photo.mlAnalysis && (
-                      <Badge className={`${photo.mlAnalysis.safetyViolations.length > 0 ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"} text-white border-0 shadow-sm font-medium flex items-center gap-1`}>
-                        {photo.mlAnalysis.safetyViolations.length > 0 ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                        {photo.mlAnalysis.safetyViolations.length > 0 ? "Hazard Flag" : "Safe"}
+                      <Badge className={`${photo.mlAnalysis.safetyViolations.length > 0 ? "bg-red-500/90 text-white" : "bg-emerald-500/90 text-white"} backdrop-blur-xs border-0 shadow-sm text-[9px] sm:text-xs font-semibold px-1.5 py-0.5 flex items-center gap-1 truncate`}>
+                        {photo.mlAnalysis.safetyViolations.length > 0 ? <AlertTriangle className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" /> : <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />}
+                        <span className="truncate">{photo.mlAnalysis.safetyViolations.length > 0 ? "Hazard Flag" : "Safe"}</span>
                       </Badge>
                     )}
                   </div>
                   <img
                     src={photo.url || "/placeholder.svg"}
                     alt={photo.filename}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                  <div className="absolute inset-0 bg-black/50 sm:opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 sm:p-3">
                     <div className="flex flex-wrap gap-1">
                       {photo.tags.slice(0, 2).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
+                        <Badge key={tag} variant="secondary" className="text-[9px] sm:text-xs px-1.5 py-0 bg-background/80 backdrop-blur-xs">
                           {tag}
                         </Badge>
                       ))}
-                      {photo.tags.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{photo.tags.length - 2}
-                        </Badge>
-                      )}
                     </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedPhoto(photo)
-                      }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDownload(photo)
-                      }}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(photo.id)
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-full bg-background/90 hover:bg-primary hover:text-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedPhoto(photo)
+                        }}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-full bg-background/90 hover:bg-primary hover:text-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDownload(photo)
+                        }}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-full bg-background/90 hover:bg-destructive hover:text-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(photo.id)
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
             ))}
