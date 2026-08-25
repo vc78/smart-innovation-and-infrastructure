@@ -204,14 +204,14 @@ export default function DashboardPage() {
                   <span className="text-sm font-medium">Vastu Analysis</span>
                 </button>
 
-                <Link href="/3d-generator">
+                <Link href="/3d-generator" onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}>
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Cube className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">3D Generator</span>
                   </button>
                 </Link>
 
-                <Link href="/dashboard/schedule">
+                <Link href="/dashboard/schedule" onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}>
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Calendar className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">Work schedule</span>
@@ -240,21 +240,21 @@ export default function DashboardPage() {
                   <span className="text-sm font-medium">Documents</span>
                 </button>
 
-                <Link href="/dashboard/contractors">
+                <Link href="/dashboard/contractors" onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}>
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Users className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">Contractors</span>
                   </button>
                 </Link>
 
-                <Link href="/dashboard/careers">
+                <Link href="/dashboard/careers" onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}>
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Briefcase className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">Recruitment</span>
                   </button>
                 </Link>
 
-                <Link href="/settings">
+                <Link href="/settings" onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) setSidebarOpen(false); }}>
                   <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Settings className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">Settings</span>
