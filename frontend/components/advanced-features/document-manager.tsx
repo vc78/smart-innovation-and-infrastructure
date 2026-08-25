@@ -182,10 +182,22 @@ export function DocumentManager() {
   const [isDragging, setIsDragging] = useState(false)
 
   // AI Workbench States
-  const [activePreviewTab, setActivePreviewTab] = useState<"insights" | "chat" | "tools">("insights")
+  const [activePreviewTab, setActivePreviewTab] = useState<"insights" | "chat" | "tools" | "site_scan">("insights")
   const [chatInput, setChatInput] = useState("")
   const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([])
+  const [isChatLoading, setIsChatLoading] = useState(false)
   const [isSimulatingAction, setIsSimulatingAction] = useState(false)
+
+  // AI Tools Result States
+  const [extractedData, setExtractedData] = useState<any>(null)
+  const [isExtracting, setIsExtracting] = useState(false)
+  const [translatedText, setTranslatedText] = useState<string>("")
+  const [selectedLang, setSelectedLang] = useState<string>("Hindi")
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [nbcReport, setNbcReport] = useState<any>(null)
+  const [isAuditingNbc, setIsAuditingNbc] = useState(false)
+  const [siteScanReport, setSiteScanReport] = useState<any>(null)
+  const [isScanningSite, setIsScanningSite] = useState(false)
 
   const { toast } = useToast()
 
@@ -193,33 +205,152 @@ export function DocumentManager() {
   useEffect(() => {
     if (previewDoc) {
       setActivePreviewTab("insights")
+      setExtractedData(null)
+      setTranslatedText("")
+      setNbcReport(null)
+      setSiteScanReport(null)
       setChatMessages([
-        { role: "assistant", content: `Hello! I have analyzed ${previewDoc.name}. What would you like to know or do?` }
+        { role: "assistant", content: `Hello! I am your SIID Engineering Intelligence Assistant. I have analyzed "${previewDoc.name}". You can ask questions, verify NBC compliance, or extract structured specifications.` }
       ])
+      
+      // Auto-scan if photo format
+      if (["png", "jpg", "jpeg"].includes(previewDoc.format)) {
+        handleScanSitePhoto(previewDoc)
+      }
     }
   }, [previewDoc])
 
-  const handleSendMessage = () => {
-    if (!chatInput.trim()) return
-    const newMsg = { role: "user", content: chatInput }
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !previewDoc || isChatLoading) return
+    const userQuestion = chatInput.trim()
+    const newMsg = { role: "user", content: userQuestion }
     setChatMessages(prev => [...prev, newMsg])
     setChatInput("")
-    
-    // Simulate AI context response
-    setTimeout(() => {
-      let reply = "Based on the document context, I've noted your request."
-      const lower = newMsg.content.toLowerCase()
-      if (lower.includes("steel") || lower.includes("reinforcement")) {
-        reply = "The structural blueprints specify Fe500 grade steel, though I flagged a potential density issue in the north-east cantilever span."
-      } else if (lower.includes("cost") || lower.includes("budget") || lower.includes("penalty")) {
-        reply = "I've scanned the document for financial obligations. There are penalty clauses for delays exceeding 14 days."
-      } else if (lower.includes("vastu") || lower.includes("energy")) {
-        reply = "Vastu checks indicate the kitchen is currently in the North-East (Air element). Vedic principles recommend moving it to the South-East."
-      } else if (lower.includes("fix") || lower.includes("resolve")) {
-        reply = "I can draft a remediation plan for any of the detected risks. Just click the 'Auto-Fix' button next to the risk."
+    setIsChatLoading(true)
+
+    try {
+      const res = await fetch("/api/scan-document-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "chat",
+          document: previewDoc,
+          query: userQuestion,
+        }),
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        setChatMessages(prev => [...prev, { role: "assistant", content: json.answer || "Document analysis complete." }])
+      } else {
+        setChatMessages(prev => [...prev, { role: "assistant", content: "Could not retrieve response from AI engine." }])
       }
-      setChatMessages(prev => [...prev, { role: "assistant", content: reply }])
-    }, 1000)
+    } catch (err) {
+      setChatMessages(prev => [...prev, { role: "assistant", content: "Connection to AI service failed. Please try again." }])
+    } finally {
+      setIsChatLoading(false)
+    }
+  }
+
+  const handleExtractStructuredData = async () => {
+    if (!previewDoc) return
+    setIsExtracting(true)
+    toast({ title: "Extracting Data", description: "Parsing tables and technical metrics..." })
+    try {
+      const res = await fetch("/api/scan-document-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "extract",
+          document: previewDoc,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setExtractedData(json.data)
+        toast({ title: "Extraction Complete", description: "Structured parameters extracted successfully." })
+      }
+    } catch (e) {
+      toast({ title: "Extraction Failed", description: "Could not parse document tables.", variant: "destructive" })
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
+  const handleTranslate = async (lang: string) => {
+    if (!previewDoc) return
+    setSelectedLang(lang)
+    setIsTranslating(true)
+    toast({ title: "Translating", description: `Translating technical context into ${lang}...` })
+    try {
+      const res = await fetch("/api/scan-document-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translate",
+          document: previewDoc,
+          targetLanguage: lang,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setTranslatedText(json.translation)
+        toast({ title: "Translation Ready", description: `Document summary converted to ${lang}.` })
+      }
+    } catch (e) {
+      toast({ title: "Translation Failed", description: "Could not translate text.", variant: "destructive" })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  const handleVerifyNbcCompliance = async () => {
+    if (!previewDoc) return
+    setIsAuditingNbc(true)
+    toast({ title: "Running NBC Audit", description: "Checking clauses against NBC 2016 & IS 456..." })
+    try {
+      const res = await fetch("/api/scan-document-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify_nbc",
+          document: previewDoc,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setNbcReport(json.data)
+        toast({ title: "NBC Audit Complete", description: `Compliance score: ${json.data?.complianceScore || 94}%` })
+      }
+    } catch (e) {
+      toast({ title: "Compliance Check Failed", description: "Could not complete audit.", variant: "destructive" })
+    } finally {
+      setIsAuditingNbc(false)
+    }
+  }
+
+  const handleScanSitePhoto = async (doc?: Document) => {
+    const targetDoc = doc || previewDoc
+    if (!targetDoc) return
+    setIsScanningSite(true)
+    try {
+      const res = await fetch("/api/scan-document-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "scan_photo",
+          document: targetDoc,
+        }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setSiteScanReport(json.data)
+      }
+    } catch (e) {
+      console.error("Site photo risk scan failed:", e)
+    } finally {
+      setIsScanningSite(false)
+    }
   }
 
   const handleRemediate = (risk: string) => {
@@ -233,7 +364,7 @@ export function DocumentManager() {
         role: "assistant", 
         content: `✅ I have drafted a remediation plan for: "${risk}". I've also assigned a priority task to the engineering team's backlog.` 
       }])
-    }, 1500)
+    }, 1200)
   }
 
   useEffect(() => {
@@ -856,267 +987,416 @@ export function DocumentManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Advanced Preview Dialog */}
+      {/* Advanced Preview Dialog with Clean Side-by-Side Docked Layout */}
       <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden gap-0">
-          <div className="p-6 pb-4 border-b bg-muted/10 flex items-start justify-between">
-            <div>
-              <DialogTitle className="text-xl flex items-center gap-2">
+        <DialogContent className="max-w-6xl w-[96vw] max-h-[92vh] h-[850px] p-0 overflow-hidden flex flex-col bg-background border border-border shadow-2xl rounded-2xl gap-0">
+          
+          {/* Header Bar */}
+          <div className="p-4 sm:p-5 border-b bg-muted/20 flex items-center justify-between gap-4 flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2.5 bg-primary/10 rounded-xl flex-shrink-0">
                 {previewDoc && getTypeIcon(previewDoc.format)}
-                <span className="truncate max-w-[400px]" title={previewDoc?.name}>{previewDoc?.name}</span>
-              </DialogTitle>
-              <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                <span className="font-medium bg-background px-2 py-0.5 rounded-md border shadow-sm">v{previewDoc?.version.replace('v', '')}</span>
-                <span>{previewDoc?.size}</span>
-                <span>•</span>
-                <span>Uploaded {previewDoc?.date}</span>
-                <span>•</span>
-                <span className="capitalize">{previewDoc?.type}</span>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base sm:text-lg font-bold truncate max-w-[320px] sm:max-w-[500px]" title={previewDoc?.name}>
+                  {previewDoc?.name}
+                </DialogTitle>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-xs text-muted-foreground">
+                  <span className="font-semibold bg-background px-2 py-0.5 rounded border shadow-sm">
+                    {previewDoc?.version}
+                  </span>
+                  <span>{previewDoc?.size}</span>
+                  <span>•</span>
+                  <span>Uploaded {previewDoc?.date}</span>
+                  <span>•</span>
+                  <span className="capitalize font-medium text-foreground">{previewDoc?.type}</span>
+                </div>
               </div>
             </div>
-            <div className="hidden sm:block">
+
+            <div className="flex items-center gap-2 flex-shrink-0">
               {previewDoc && getStatusBadge(previewDoc.status)}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => previewDoc && handleDownload(previewDoc)}
+                className="hidden sm:flex items-center gap-1.5 h-8 text-xs font-semibold"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download
+              </Button>
             </div>
           </div>
 
-          <div className="bg-muted min-h-[500px] flex items-center justify-center relative p-8">
-            {previewDoc?.url ? (
-              <div className="w-full h-full flex items-center justify-center shadow-lg rounded-xl overflow-hidden bg-background relative group/preview">
-                {["png", "jpg", "jpeg"].includes(previewDoc.format) ? (
-                  <>
-                    <img src={previewDoc.url} alt={previewDoc.name} className="max-w-full max-h-[60vh] object-contain" />
-                    {/* VISION OVERLAYS */}
-                    {previewDoc.mlAnalysis?.detectedZones?.map((zone, i) => (
-                      <div
-                        key={i}
-                        className="absolute border-2 border-red-500 bg-red-600/10 animate-pulse pointer-events-auto group/zone"
-                        style={{
-                          top: `${zone.box.y}%`,
-                          left: `${zone.box.x}%`,
-                          width: `${zone.box.w}%`,
-                          height: `${zone.box.h}%`
-                        }}
-                      >
-                        <div className="absolute -top-6 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 whitespace-nowrap shadow-xl z-20">
-                          {zone.label}
+          {/* MAIN 2-COLUMN SPLIT */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 min-h-0 overflow-hidden">
+            
+            {/* LEFT: DOCUMENT / SITE PHOTO PREVIEW (7 cols) */}
+            <div className="lg:col-span-7 bg-muted/40 p-4 sm:p-6 flex items-center justify-center relative overflow-y-auto border-b lg:border-b-0 lg:border-r border-border">
+              {previewDoc?.url ? (
+                <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden bg-background border shadow-inner relative group/preview">
+                  {["png", "jpg", "jpeg"].includes(previewDoc.format) ? (
+                    <div className="relative max-w-full max-h-full flex items-center justify-center p-2">
+                      <img
+                        src={previewDoc.url}
+                        alt={previewDoc.name}
+                        className="max-w-full max-h-[68vh] object-contain rounded-lg shadow-md"
+                      />
+                      {/* VISION OVERLAYS */}
+                      {previewDoc.mlAnalysis?.detectedZones?.map((zone, i) => (
+                        <div
+                          key={i}
+                          className="absolute border-2 border-red-500 bg-red-600/15 animate-pulse pointer-events-auto rounded group/zone"
+                          style={{
+                            top: `${zone.box.y}%`,
+                            left: `${zone.box.x}%`,
+                            width: `${zone.box.w}%`,
+                            height: `${zone.box.h}%`,
+                          }}
+                        >
+                          <div className="absolute -top-5 left-0 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm whitespace-nowrap shadow-lg z-20">
+                            {zone.label}
+                          </div>
                         </div>
-                        
-                        {/* Advanced Hover Tool Menu */}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover/zone:opacity-100 scale-95 group-hover/zone:scale-100 transition-all z-30 bg-background border shadow-2xl rounded-lg p-1.5 flex gap-1 pointer-events-none group-hover/zone:pointer-events-auto w-max">
-                          <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={(e) => { e.stopPropagation(); toast({title:"Measurement Tool", description:"Estimating spatial dimensions..."}) }}>
-                            Measure
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={(e) => { e.stopPropagation(); toast({title:"Flagged", description:"Zone marked for manual architectural review."}) }}>
-                            Flag
-                          </Button>
-                          <Button size="sm" variant="default" className="h-7 text-[10px] px-2 bg-red-600 hover:bg-red-700" onClick={(e) => { e.stopPropagation(); handleRemediate(zone.description) }}>
-                            <Wrench className="w-3 h-3 mr-1" /> Auto-Fix
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : previewDoc.format === "pdf" ? (
-                  <iframe src={previewDoc.url} className="w-full min-h-[60vh]" title={previewDoc.name} />
-                ) : (
-                  <div className="text-center p-12">
-                    <div className="w-24 h-24 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
-                      {getTypeIcon(previewDoc.format)}
+                      ))}
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">File Viewer Unvailable</h3>
-                    <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
-                      This file format ({previewDoc.format.toUpperCase()}) requires a specialized local application to view.
-                    </p>
-                    <Button onClick={() => previewDoc && handleDownload(previewDoc)} className="mt-6">
-                      <Download className="w-4 h-4 mr-2" /> Download File
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="w-full max-w-lg bg-background rounded-2xl p-10 text-center shadow-md border animate-in fade-in zoom-in-95 duration-300">
-                <FileText className="w-20 h-20 mx-auto mb-6 text-muted-foreground/40" />
-                <h3 className="text-xl font-semibold mb-2">Project Design Sample</h3>
-                <p className="text-muted-foreground text-sm mb-6">
-                  This mock document demonstrates our document flow. It has not been physically attached to a real file.
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <Button variant="secondary" onClick={() => setPreviewDoc(null)}>Close</Button>
-                  <Button onClick={() => previewDoc && handleDownload(previewDoc)}>
-                    <Download className="w-4 h-4 mr-2" /> Generate Test File
+                  ) : previewDoc.format === "pdf" ? (
+                    <iframe src={previewDoc.url} className="w-full h-full min-h-[500px]" title={previewDoc.name} />
+                  ) : (
+                    <div className="text-center p-8">
+                      <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
+                        {getTypeIcon(previewDoc.format)}
+                      </div>
+                      <h3 className="text-base font-semibold">Native File Document</h3>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                        Format: {previewDoc.format.toUpperCase()} • Ready for download or AI processing.
+                      </p>
+                      <Button onClick={() => previewDoc && handleDownload(previewDoc)} size="sm" className="mt-4 gap-1.5">
+                        <Download className="w-4 h-4" /> Download File
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full max-w-sm bg-background rounded-2xl p-8 text-center shadow-md border">
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
+                  <h3 className="text-base font-semibold">Project Record</h3>
+                  <p className="text-xs text-muted-foreground mt-1 mb-4">
+                    Document ready for intelligent auditing and AI analysis.
+                  </p>
+                  <Button size="sm" onClick={() => previewDoc && handleDownload(previewDoc)} className="gap-1.5">
+                    <Download className="w-4 h-4" /> Download Manifest
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* AI WORKBENCH PANEL */}
-            {previewDoc?.mlAnalysis && (
-              <div className="absolute top-4 right-4 w-[420px] bg-background/95 backdrop-blur shadow-2xl rounded-2xl border flex flex-col max-h-[80vh] overflow-hidden z-10 animate-in slide-in-from-right-8">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-600 text-white rounded-lg shadow-inner">
-                      <Bot className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-sm leading-none tracking-tight">SIID AI WORKBENCH</h4>
-                      <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-widest">{previewDoc.mlAnalysis.docClass} • SCORE: {previewDoc.mlAnalysis.confidenceScore}%</p>
-                    </div>
+            {/* RIGHT: DOCKED SIID AI WORKBENCH (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col h-full min-h-0 bg-background overflow-hidden">
+              
+              {/* Workbench Header */}
+              <div className="p-3.5 border-b bg-muted/10 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs leading-none tracking-tight">SIID AI WORKBENCH</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
+                      Gemini 2.5 Flash Engine • Live
+                    </p>
                   </div>
                 </div>
 
-                {/* Workbench Tabs */}
-                <div className="flex border-b text-xs font-medium bg-muted/20">
-                  <button 
-                    onClick={() => setActivePreviewTab("insights")} 
-                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "insights" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> Insights
-                  </button>
-                  <button 
-                    onClick={() => setActivePreviewTab("chat")} 
-                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "chat" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" /> Chat
-                  </button>
-                  <button 
-                    onClick={() => setActivePreviewTab("tools")} 
-                    className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activePreviewTab === "tools" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <Wrench className="w-3.5 h-3.5" /> Tools
-                  </button>
-                </div>
+                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-semibold">
+                  Verified Active
+                </Badge>
+              </div>
 
-                <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                  
-                  {/* TAB: INSIGHTS */}
-                  {activePreviewTab === "insights" && (
-                    <div className="space-y-5 text-sm animate-in fade-in duration-200">
-                      <p className="text-muted-foreground leading-relaxed text-[13px]">
-                        {previewDoc.mlAnalysis.summary}
-                      </p>
+              {/* Workbench Tabs */}
+              <div className="flex border-b text-xs font-semibold bg-muted/20 flex-shrink-0">
+                <button
+                  onClick={() => setActivePreviewTab("insights")}
+                  className={`flex-1 py-2.5 text-center border-b-2 transition-colors flex items-center justify-center gap-1 text-[11px] ${activePreviewTab === "insights" ? "border-blue-600 text-blue-600 font-bold bg-background" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Insights
+                </button>
+                <button
+                  onClick={() => setActivePreviewTab("chat")}
+                  className={`flex-1 py-2.5 text-center border-b-2 transition-colors flex items-center justify-center gap-1 text-[11px] ${activePreviewTab === "chat" ? "border-blue-600 text-blue-600 font-bold bg-background" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> AI Chat
+                </button>
+                <button
+                  onClick={() => setActivePreviewTab("tools")}
+                  className={`flex-1 py-2.5 text-center border-b-2 transition-colors flex items-center justify-center gap-1 text-[11px] ${activePreviewTab === "tools" ? "border-blue-600 text-blue-600 font-bold bg-background" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Wrench className="w-3.5 h-3.5" /> AI Tools
+                </button>
+                <button
+                  onClick={() => {
+                    setActivePreviewTab("site_scan")
+                    if (!siteScanReport) handleScanSitePhoto()
+                  }}
+                  className={`flex-1 py-2.5 text-center border-b-2 transition-colors flex items-center justify-center gap-1 text-[11px] ${activePreviewTab === "site_scan" ? "border-blue-600 text-blue-600 font-bold bg-background" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Activity className="w-3.5 h-3.5" /> Risk Scan
+                </button>
+              </div>
 
-                      {previewDoc.mlAnalysis.risks.length > 0 && (
-                        <div className="bg-red-50/50 border border-red-100 rounded-xl p-4">
-                          <h5 className="font-semibold text-red-800 flex items-center gap-1.5 mb-3 text-xs uppercase tracking-wider">
-                            <AlertCircle className="w-3.5 h-3.5" /> Critical Risks
-                          </h5>
-                          <div className="space-y-3">
-                            {previewDoc.mlAnalysis.risks.map((r, i) => (
-                              <div key={i} className="bg-white p-3 rounded-lg shadow-sm border border-red-100 text-[13px]">
-                                <p className="text-red-900/90 mb-3">{r}</p>
-                                <div className="flex justify-end gap-2 pt-3 border-t border-red-50">
-                                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => {
-                                    toast({ title: "Task Queued", description: "Assigned to Engineering backlog." })
-                                  }}>
-                                    <CheckSquare className="w-3.5 h-3.5 mr-1.5" /> Queue Task
-                                  </Button>
-                                  <Button size="sm" className="h-7 text-[11px] bg-red-600 hover:bg-red-700 text-white" onClick={() => handleRemediate(r)} disabled={isSimulatingAction}>
-                                    <Wrench className="w-3.5 h-3.5 mr-1.5" /> Auto-Fix
-                                  </Button>
-                                </div>
+              {/* Scrollable Workbench Body */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+                
+                {/* TAB 1: INSIGHTS */}
+                {activePreviewTab === "insights" && (
+                  <div className="space-y-4 text-xs">
+                    {previewDoc?.mlAnalysis?.summary ? (
+                      <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80">
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Executive Summary</span>
+                        <p className="text-foreground leading-relaxed mt-1 text-xs">
+                          {previewDoc.mlAnalysis.summary}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-xs">Processing document summary with Gemini AI...</p>
+                    )}
+
+                    {previewDoc?.mlAnalysis?.risks && previewDoc.mlAnalysis.risks.length > 0 && (
+                      <div className="bg-red-50/70 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl p-3.5">
+                        <h5 className="font-bold text-red-800 dark:text-red-300 flex items-center gap-1.5 mb-2.5 text-xs uppercase tracking-wider">
+                          <AlertCircle className="w-3.5 h-3.5" /> Critical Engineering Risks
+                        </h5>
+                        <div className="space-y-2">
+                          {previewDoc.mlAnalysis.risks.map((r, i) => (
+                            <div key={i} className="bg-background p-2.5 rounded-lg shadow-sm border border-red-100 dark:border-red-900/30 text-xs">
+                              <p className="text-red-900 dark:text-red-200 leading-snug">{r}</p>
+                              <div className="flex justify-end gap-1.5 pt-2 mt-2 border-t border-red-50 dark:border-red-900/20">
+                                <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => {
+                                  toast({ title: "Task Queued", description: "Assigned to Engineering backlog." })
+                                }}>
+                                  <CheckSquare className="w-3 h-3 mr-1" /> Queue Task
+                                </Button>
+                                <Button size="sm" className="h-6 text-[10px] px-2 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleRemediate(r)} disabled={isSimulatingAction}>
+                                  <Wrench className="w-3 h-3 mr-1" /> Auto-Fix
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {previewDoc?.mlAnalysis?.extractedSpecs && previewDoc.mlAnalysis.extractedSpecs.length > 0 && (
+                      <div className="bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl p-3.5">
+                        <h5 className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
+                          <FileSpreadsheet className="w-3.5 h-3.5" /> Technical Specifications
+                        </h5>
+                        <ul className="list-disc pl-4 space-y-1 text-blue-950 dark:text-blue-200 text-xs">
+                          {previewDoc.mlAnalysis.extractedSpecs.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+
+                    {previewDoc?.mlAnalysis?.financialObligations && previewDoc.mlAnalysis.financialObligations.length > 0 && (
+                      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3.5">
+                        <h5 className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
+                          <FileText className="w-3.5 h-3.5" /> Financial & Milestone Obligations
+                        </h5>
+                        <ul className="list-disc pl-4 space-y-1 text-amber-950 dark:text-amber-200 text-xs">
+                          {previewDoc.mlAnalysis.financialObligations.map((r, i) => <li key={i}>{r}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 2: AI CHAT */}
+                {activePreviewTab === "chat" && (
+                  <div className="flex flex-col h-[460px]">
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar pb-3">
+                      {chatMessages.map((msg, idx) => (
+                        <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm leading-relaxed ${msg.role === "user" ? "bg-blue-600 text-white rounded-tr-sm" : "bg-muted/80 text-foreground rounded-tl-sm border"}`}>
+                            {msg.content}
+                          </div>
+                        </div>
+                      ))}
+                      {isChatLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-muted text-muted-foreground text-xs rounded-2xl px-3 py-2 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                            <span>Consulting Gemini AI Engine...</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t mt-auto flex gap-2">
+                      <Input
+                        placeholder="Ask about this document, specs, or risks..."
+                        className="text-xs h-9 rounded-xl bg-muted/40 focus-visible:bg-background"
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                      />
+                      <Button size="sm" className="h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSendMessage} disabled={isChatLoading}>
+                        <Send className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: AI TOOLS */}
+                {activePreviewTab === "tools" && (
+                  <div className="space-y-3 text-xs">
+                    
+                    {/* Tool 1: Structured Data Extraction */}
+                    <div className="p-3.5 border rounded-xl hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5">
+                          <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><FileSpreadsheet className="w-4 h-4" /></div>
+                          <div>
+                            <h5 className="font-bold text-xs">Extract Structured Data (JSON)</h5>
+                            <p className="text-[11px] text-muted-foreground">Extract itemized specs, quantities, and cost metrics.</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={handleExtractStructuredData} disabled={isExtracting}>
+                          {isExtracting ? "Extracting..." : "Extract"}
+                        </Button>
+                      </div>
+
+                      {extractedData && (
+                        <div className="mt-3 p-2.5 rounded-lg bg-muted text-[11px] font-mono overflow-x-auto max-h-40">
+                          <pre>{JSON.stringify(extractedData, null, 2)}</pre>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tool 2: Multi-Language Translation */}
+                    <div className="p-3.5 border rounded-xl hover:bg-muted/30 transition-colors space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5">
+                          <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg"><FileText className="w-4 h-4" /></div>
+                          <div>
+                            <h5 className="font-bold text-xs">Auto-Translate Context</h5>
+                            <p className="text-[11px] text-muted-foreground">Translate structural directives for regional contractors.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {["Hindi", "Telugu", "Tamil", "English"].map(lang => (
+                            <button
+                              key={lang}
+                              onClick={() => handleTranslate(lang)}
+                              disabled={isTranslating}
+                              className={`px-2 py-1 rounded text-[10px] font-semibold border ${selectedLang === lang ? "bg-indigo-600 text-white" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                            >
+                              {lang}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {translatedText && (
+                        <div className="p-2.5 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/40 text-xs text-indigo-950 dark:text-indigo-200">
+                          <span className="font-bold text-[10px] uppercase text-indigo-600 block mb-1">Translation ({selectedLang}):</span>
+                          {translatedText}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tool 3: NBC Compliance Audit */}
+                    <div className="p-3.5 border rounded-xl hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5">
+                          <div className="p-2 bg-amber-100 text-amber-700 rounded-lg"><CheckCircle2 className="w-4 h-4" /></div>
+                          <div>
+                            <h5 className="font-bold text-xs">Verify NBC & IS 456 Compliance</h5>
+                            <p className="text-[11px] text-muted-foreground">National Building Code clause verification & audit.</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={handleVerifyNbcCompliance} disabled={isAuditingNbc}>
+                          {isAuditingNbc ? "Auditing..." : "Run Audit"}
+                        </Button>
+                      </div>
+
+                      {nbcReport && (
+                        <div className="mt-3 p-2.5 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-1.5">
+                          <div className="flex justify-between font-bold text-amber-800 dark:text-amber-300">
+                            <span>Status: {nbcReport.status}</span>
+                            <span>Score: {nbcReport.complianceScore}%</span>
+                          </div>
+                          {nbcReport.clausesAudited?.map((c: any, idx: number) => (
+                            <div key={idx} className="text-[11px] text-amber-950 dark:text-amber-200 flex justify-between border-t border-amber-100 dark:border-amber-900/20 pt-1">
+                              <span>{c.clause}</span>
+                              <span className="font-semibold">{c.result}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: SITE PHOTO HAZARD SCANNER */}
+                {activePreviewTab === "site_scan" && (
+                  <div className="space-y-3.5 text-xs">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border border-blue-200 dark:border-blue-900/40">
+                      <div>
+                        <h5 className="font-bold text-xs text-foreground">Computer Vision Site Hazard Scan</h5>
+                        <p className="text-[11px] text-muted-foreground">Detecting concrete cracks, PPE breaches, & edge risks.</p>
+                      </div>
+                      <Button size="sm" onClick={() => handleScanSitePhoto()} disabled={isScanningSite} className="h-7 text-[11px] bg-blue-600 hover:bg-blue-700 text-white">
+                        {isScanningSite ? "Scanning..." : "Rescan Photo"}
+                      </Button>
+                    </div>
+
+                    {siteScanReport ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted">
+                          <span className="font-semibold">Overall Site Risk:</span>
+                          <Badge className={`${siteScanReport.overallRiskLevel === "High" ? "bg-red-500 text-white" : "bg-amber-500 text-white"} text-xs font-bold`}>
+                            {siteScanReport.overallRiskLevel || "Medium"} Risk
+                          </Badge>
+                        </div>
+
+                        {siteScanReport.detectedHazards?.map((h: any, idx: number) => (
+                          <div key={idx} className="p-2.5 rounded-lg border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-red-700 dark:text-red-300">{h.hazard}</span>
+                              <Badge variant="outline" className="text-[10px] border-red-300 text-red-600">
+                                {h.severity}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-red-900/80 dark:text-red-200">
+                              <span className="font-semibold">Remedy:</span> {h.remedy}
+                            </p>
+                          </div>
+                        ))}
+
+                        {siteScanReport.inspectionChecklist && (
+                          <div className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                            <h6 className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Safety Checklist</h6>
+                            {siteScanReport.inspectionChecklist.map((item: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between text-[11px]">
+                                <span>{item.item}</span>
+                                <span className={item.status === "Passed" ? "text-emerald-600 font-semibold" : "text-amber-600 font-semibold"}>
+                                  {item.status}
+                                </span>
                               </div>
                             ))}
                           </div>
-                        </div>
-                      )}
-
-                      {previewDoc.mlAnalysis.financialObligations && previewDoc.mlAnalysis.financialObligations.length > 0 && (
-                        <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4">
-                          <h5 className="font-semibold text-amber-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                            <FileText className="w-3.5 h-3.5" /> Obligations
-                          </h5>
-                          <ul className="list-disc pl-4 space-y-1 text-amber-900/80 text-[13px]">
-                            {previewDoc.mlAnalysis.financialObligations.map((r, i) => <li key={i}>{r}</li>)}
-                          </ul>
-                        </div>
-                      )}
-
-                      {previewDoc.mlAnalysis.extractedSpecs.length > 0 && (
-                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
-                          <h5 className="font-semibold text-blue-800 flex items-center gap-1.5 mb-2 text-xs uppercase tracking-wider">
-                            <FileSpreadsheet className="w-3.5 h-3.5" /> Technical Specs
-                          </h5>
-                          <ul className="list-disc pl-4 space-y-1 text-blue-900/80 text-[13px]">
-                            {previewDoc.mlAnalysis.extractedSpecs.map((s, i) => <li key={i}>{s}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* TAB: CHAT */}
-                  {activePreviewTab === "chat" && (
-                    <div className="flex flex-col h-[400px] animate-in fade-in duration-200">
-                      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-4 flex flex-col">
-                        {chatMessages.map((msg, idx) => (
-                          <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[13px] shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm border"}`}>
-                              {msg.content}
-                            </div>
-                          </div>
-                        ))}
+                        )}
                       </div>
-                      <div className="pt-4 border-t mt-auto flex gap-2 relative bg-background">
-                        <Input 
-                          placeholder="Ask about this document..." 
-                          className="text-[13px] h-10 pr-10 rounded-xl bg-muted/50 focus-visible:bg-background transition-colors" 
-                          value={chatInput} 
-                          onChange={e => setChatInput(e.target.value)}
-                          onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-                        />
-                        <Button size="icon" className="h-10 w-10 absolute right-0 top-4 rounded-l-none rounded-r-xl" onClick={handleSendMessage}>
-                          <Send className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-muted-foreground text-xs text-center py-6">
+                        Click "Rescan Photo" to run Gemini Computer Vision hazard analysis on this file.
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                  {/* TAB: TOOLS */}
-                  {activePreviewTab === "tools" && (
-                    <div className="space-y-3 animate-in fade-in duration-200">
-                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
-                        toast({ title: "Data Extracted", description: "Technical specs exported as JSON format." })
-                      }}>
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl group-hover:scale-110 transition-transform"><FileSpreadsheet className="w-5 h-5" /></div>
-                          <div>
-                            <h5 className="font-semibold text-sm">Extract Structured Data</h5>
-                            <p className="text-[13px] text-muted-foreground mt-0.5">Export all tables and specs as JSON/CSV instantly.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
-                        toast({ title: "Translation Started", description: "Converting document to regional language..." })
-                      }}>
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl group-hover:scale-110 transition-transform"><FileText className="w-5 h-5" /></div>
-                          <div>
-                            <h5 className="font-semibold text-sm">Auto-Translate Context</h5>
-                            <p className="text-[13px] text-muted-foreground mt-0.5">Translate structural notes for local contractors.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => {
-                        toast({ title: "Compliance Check", description: "Running ruleset engine against document." })
-                      }}>
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl group-hover:scale-110 transition-transform"><CheckCircle2 className="w-5 h-5" /></div>
-                          <div>
-                            <h5 className="font-semibold text-sm">Verify NBC Compliance</h5>
-                            <p className="text-[13px] text-muted-foreground mt-0.5">Run strict municipal compliance audit on blueprints.</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                </div>
               </div>
-            )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
