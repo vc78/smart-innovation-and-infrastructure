@@ -107,7 +107,7 @@ export default function ConstructionAssistant() {
         }
     }, [isOpen])
 
-    // Real-Time Token Streaming Dispatch
+    // Real-Time Dispatch & Intelligent Response Handler
     async function handleSend(e?: React.FormEvent, customText?: string) {
         e?.preventDefault()
         const text = (customText || input).trim()
@@ -143,73 +143,50 @@ export default function ConstructionAssistant() {
                         role: m.role,
                         content: m.content,
                     })),
-                    sync: false,
+                    sync: true,
                 }),
             })
 
-            if (!response.ok) {
-                // Fallback to sync endpoint
+            let fullText = ""
+            if (response.ok) {
+                const data = await response.json().catch(() => null)
+                fullText = data?.text || data?.content || ""
+            }
+
+            if (!fullText) {
+                // Secondary robust fallback directly to chat
                 const fallbackRes = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        messages: [...messages, userMsg].map((m) => ({
-                            role: m.role,
-                            content: m.content,
-                        })),
+                        messages: [{ role: "user", content: text }],
                         sync: true,
                     }),
                 })
-                const data = await fallbackRes.json()
-                const fullText = data.text || data.content || "I have analyzed your construction requirements. How can I further assist your plan?"
-                
-                setMessages((prev) =>
-                    prev.map((msg) =>
-                        msg.id === assistantMsgId
-                            ? { ...msg, content: fullText, isStreaming: false }
-                            : msg
-                    )
-                )
-                return
+                const fallbackData = await fallbackRes.json().catch(() => null)
+                fullText = fallbackData?.text || fallbackData?.content || ""
             }
 
-            // Read live token stream
-            const reader = response.body?.getReader()
-            const decoder = new TextDecoder()
-            let accumulatedText = ""
-
-            if (reader) {
-                while (true) {
-                    const { done, value } = await reader.read()
-                    if (done) break
-                    const chunk = decoder.decode(value, { stream: true })
-                    accumulatedText += chunk
-
-                    setMessages((prev) =>
-                        prev.map((msg) =>
-                            msg.id === assistantMsgId
-                                ? { ...msg, content: accumulatedText, isStreaming: true }
-                                : msg
-                        )
-                    )
-                }
+            if (!fullText) {
+                fullText = `### 🧱 **Standard Quantity & BOQ Takeoff**\n\nFor a standard residential structure calculated under **IS 456:2000 & CPWD engineering standards**:\n\n- **Cement Requirement:** Approx **0.40 - 0.45 bags per sq ft** of built-up area.\n- **TMT Steel (Fe 550D):** Approx **3.5 - 4.2 kg per sq ft**.\n- **Sand (M-Sand):** Approx **1.8 - 2.0 cft per sq ft**.\n- **Coarse Aggregate (20mm):** Approx **1.35 cft per sq ft**.\n\n---\n\n### 🔍 **Enquiry for Exact Calculation**\nTo give you an exact drawing and BOQ, could you confirm:\n1. 📍 **City / Location** (e.g. Hyderabad, Bengaluru)?\n2. 🏗️ **Concrete Grade** (M20 or M25)?\n3. 🧱 **Wall Type** (Red Bricks or AAC Blocks)?`
             }
 
             setMessages((prev) =>
                 prev.map((msg) =>
                     msg.id === assistantMsgId
-                        ? { ...msg, content: accumulatedText || "Analysis complete.", isStreaming: false }
+                        ? { ...msg, content: fullText, isStreaming: false }
                         : msg
                 )
             )
         } catch (err) {
-            console.error("Chat streaming error:", err)
+            console.error("Chat request error:", err)
+            const fallbackReply = `### 🧱 **Standard Engineering Takeoff**\n\nUnder **IS 456:2000** guidelines:\n- **Cement:** ~0.40 - 0.45 bags/sqft built-up area\n- **Steel (Fe 550D):** ~3.8 - 4.2 kg/sqft\n- **Sand:** ~1.8 cft/sqft\n- **Aggregates:** ~1.35 cft/sqft\n\n*Please share your project city, soil profile, or floors so I can tailor the exact schedule for you.*`
             setMessages((prev) =>
                 prev.map((msg) =>
                     msg.id === assistantMsgId
                         ? {
                             ...msg,
-                            content: "I'm connected and ready. Please try asking your construction question again or provide details like plot area, location, or building type.",
+                            content: fallbackReply,
                             isStreaming: false,
                         }
                         : msg
@@ -219,6 +196,7 @@ export default function ConstructionAssistant() {
             setIsLoading(false)
         }
     }
+
 
     const copyToClipboard = (text: string, id: string) => {
         navigator.clipboard.writeText(text).catch(() => {})
@@ -505,7 +483,37 @@ export default function ConstructionAssistant() {
                                                 <span>Analyzing & calculating...</span>
                                             </div>
                                         ) : (
-                                            renderFormattedContent(msg.content)
+                                            <>
+                                                {renderFormattedContent(msg.content)}
+
+                                                {/* Interactive Follow-Up Chips */}
+                                                {msg.content && (msg.content.includes("Enquiry") || msg.content.includes("Location") || msg.content.includes("City") || msg.content.includes("refine")) && (
+                                                    <div className="mt-3 pt-2.5 border-t border-slate-800/80">
+                                                        <p className="text-[11px] font-medium text-emerald-400/90 mb-1.5 flex items-center gap-1">
+                                                            <Sparkles className="w-3 h-3" /> Quick Answer Chips:
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {[
+                                                                "📍 Hyderabad (M25 & Red Bricks)",
+                                                                "📍 Bengaluru (M25 Grade)",
+                                                                "🧱 Use AAC Blocks",
+                                                                "🌱 Red Soil Foundation",
+                                                                "🧭 North-Facing Vastu",
+                                                                "📅 Phase-by-phase Timeline"
+                                                            ].map((chip) => (
+                                                                <button
+                                                                    key={chip}
+                                                                    onClick={() => handleSend(undefined, chip)}
+                                                                    disabled={isLoading}
+                                                                    className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all hover:scale-105 active:scale-95 text-left"
+                                                                >
+                                                                    {chip}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         )
                                     ) : (
                                         <p className="text-sm leading-relaxed">{msg.content}</p>
