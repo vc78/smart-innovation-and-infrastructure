@@ -3,273 +3,143 @@
 import React, { useState, useRef, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import {
     Send,
     X,
     Sparkles,
-    Home,
-    IndianRupee,
-    Building2,
-    LayoutPanelLeft,
-    HardHat,
-    Zap,
     Copy,
     Check,
-    MessageCircle,
+    Bot,
+    User,
+    RefreshCw,
+    Maximize2,
+    Minimize2,
+    Flame,
+    Building,
+    Calculator,
+    ShieldAlert,
+    Palette,
+    Compass,
+    ChevronDown,
+    Zap,
 } from "lucide-react"
 
 type Message = {
     id: string
     role: "user" | "assistant"
     content: string
-    metadata?: {
-        category?: string
-        confidence?: number
-    }
+    timestamp?: string
+    isStreaming?: boolean
 }
 
-const SYSTEM_PROMPT = `You are BuildAssist Smart, an intelligent construction planning system for the SIID FLASH platform.
-
-YOUR ROLE:
-You help users plan, design, and estimate construction projects such as houses, apartments, commercial buildings, and interiors with expertise and professionalism.
-
-YOUR CAPABILITIES:
-- Ask detailed questions to understand user requirements completely
-- Suggest building layouts and room arrangements based on dimensions
-- Recommend materials aligned with budget and location
-- Provide accurate cost estimation (low, medium, high budget options)
-- Suggest realistic construction steps and project timelines
-- Help with structural planning basics
-- Guide users step-by-step like a professional consultant
-
-YOUR RULES:
-- ALWAYS ask clarifying questions before providing final suggestions
-- ALWAYS provide structured, professional responses
-- Use tables for cost/material comparisons when relevant
-- Be simple, clear, and professional in all communications
-- When given dimensions (plot size, room sizes), generate layout suggestions
-- When given budget, optimize materials and design accordingly
-- If user seems confused, guide them step-by-step through the process
-- Include Indian construction standards where applicable
-- Provide Indian pricing in Rupees (₹) when estimating costs
-- Suggest materials commonly available in India
-
-YOUR RESPONSE FORMAT (Always follow this):
-1. Understanding Requirements (What you understood from user's input)
-2. Tailored Suggestions (Specific recommendations based on their needs)
-3. Estimated Cost Range (Low/Medium/High budget options)
-4. Recommended Materials (List with specifications)
-5. Next Steps (What to do next)
-6. Follow-up Question (To better understand their needs)
-
-INTERACTION STYLE:
-- Be conversational yet professional
-- Use emojis sparingly but appropriately
-- Show enthusiasm for their project
-- Ask one clear follow-up question per response
-- Remember previous context in the conversation
-
-ALWAYS respond in well-formatted, readable markdown.`
-
-// SIID Logo SVG Component - Professional Design
-function SIIDLogo({ className = "w-6 h-6" }: { className?: string }) {
-    return (
-        <svg
-            viewBox="0 0 200 200"
-            className={cn(className, "drop-shadow-md")}
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            {/* Outer circle */}
-            <circle cx="100" cy="100" r="95" stroke="#4a9b7e" strokeWidth="2" />
-            {/* Building outline */}
-            <g transform="translate(70, 50)">
-                <rect x="0" y="10" width="60" height="50" fill="none" stroke="#2d5a6d" strokeWidth="1.5" />
-                {/* Windows */}
-                <rect x="8" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="22" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="36" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="8" y="30" width="10" height="8" fill="#2d5a6d" />
-                <rect x="22" y="30" width="10" height="8" fill="#2d5a6d" />
-                <rect x="36" y="30" width="10" height="8" fill="#2d5a6d" />
-                {/* Roof */}
-                <path d="M 0 10 L 30 0 L 60 10" fill="none" stroke="#2d5a6d" strokeWidth="1.5" />
-            </g>
-            {/* Ellipse orbit */}
-            <ellipse cx="100" cy="100" rx="55" ry="25" fill="none" stroke="#4a9b7e" strokeWidth="2" />
-            {/* Banner text */}
-            <rect x="50" y="130" width="100" height="20" fill="#4a9b7e" rx="3" />
-            <text x="100" y="143" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                SINCE 2025
-            </text>
-        </svg>
-    )
-}
-
-// Training Q&A Database
-type QAItem = {
-    id: number
-    category: string
-    question: string
-    answer: string
-}
-
-const TRAINING_QA_DATABASE: QAItem[] = [
-    // Foundation
-    { id: 1, category: "Foundation", question: "What is a foundation?", answer: "A foundation is the lowest load-bearing part of a building that transfers the weight of the structure to the ground." },
-    { id: 2, category: "Foundation", question: "What are the types of foundations?", answer: "Main types include: Shallow foundations (spread footing, pad footing, strip footing), Deep foundations (pile, caisson, drilled shaft)." },
-    { id: 3, category: "Foundation", question: "What is soil bearing capacity?", answer: "The maximum load per unit area that the soil can support without failure or excessive settlement. Typically measured in kPa or tons/m²." },
-    { id: 4, category: "Foundation", question: "What is a raft foundation?", answer: "A raft (or mat) foundation is a continuous reinforced concrete slab supporting an entire building structure." },
-    { id: 5, category: "Foundation", question: "When should we use pile foundation?", answer: "Use pile foundations when soil bearing capacity is low, for tall structures, or when building over water/unstable ground." },
-    // Structural Design
-    { id: 21, category: "Structural Design", question: "What is load bearing masonry?", answer: "Masonry walls that support the weight of the structure above, made from brick, stone, or concrete blocks." },
-    { id: 22, category: "Structural Design", question: "What are typical concrete grades?", answer: "M20, M25, M30, M35, M40, M50 where M denotes Mix and number is compressive strength in MPa." },
-    { id: 23, category: "Structural Design", question: "What is reinforcement ratio?", answer: "The percentage of reinforcement steel provided relative to the cross-sectional area of concrete." },
-    { id: 24, category: "Structural Design", question: "What is modulus of elasticity?", answer: "E value: for concrete ~30,000 MPa, for steel ~200,000 MPa; measures resistance to elastic deformation." },
-    // Materials
-    { id: 41, category: "Materials", question: "What are the properties of cement?", answer: "Binding agent; main types are OPC (53/43 grade), PPC, white cement; sets in 30-600 minutes." },
-    { id: 42, category: "Materials", question: "What is fineness of cement?", answer: "Measure of cement particle size; finer cement provides higher early strength but increases shrinkage risk." },
-    { id: 48, category: "Materials", question: "What is water cement ratio?", answer: "Ratio of water to cement weight; lower ratio produces stronger concrete but reduces workability." },
-    { id: 49, category: "Materials", question: "What is slump test?", answer: "Field test measuring concrete workability by measuring subsidence of concrete after lifting a cone." },
-    // Masonry
-    { id: 61, category: "Masonry", question: "What is brick masonry?", answer: "Construction using bricks bonded with mortar; common in walls, provides good thermal mass." },
-    { id: 62, category: "Masonry", question: "What is mortar?", answer: "Binding agent made from cement, sand, lime; provides joint strength but allows movement." },
-    // Roofing
-    { id: 101, category: "Roofing", question: "What is roof pitch?", answer: "Slope of roof measured as ratio (e.g., 4:12) or degrees; affects drainage and aesthetic." },
-    { id: 102, category: "Roofing", question: "What is flat roof?", answer: "Roof with minimal slope (typically 5-10°); practical but requires careful waterproofing." },
-    // Plumbing
-    { id: 116, category: "Plumbing", question: "What is water supply system?", answer: "Network delivering clean water to building; includes tanks, pipes, and pressure regulation." },
-    { id: 124, category: "Plumbing", question: "What is rainwater harvesting?", answer: "Collecting rooftop runoff for reuse; reduces water consumption and flooding." },
-    // Cost Estimation
-    { id: 176, category: "Cost Estimation", question: "What is built-up area (BUA)?", answer: "Total floor area within building boundaries; used for cost estimation per square meter." },
-    { id: 180, category: "Cost Estimation", question: "What is labor cost?", answer: "Wages for workers; typically 20-30% of total project cost." },
-]
-
-// Quick suggestions for initial state
+// Preset Quick Suggestions with Rich Context
 const QUICK_SUGGESTIONS = [
-    { label: "2BHK House", emoji: "🏠", prompt: "Help me design a 2BHK house" },
-    { label: "Budget Estimate", emoji: "💰", prompt: "What's the cost for a 2000 sqft house?" },
-    { label: "Commercial Space", emoji: "🏢", prompt: "Plan a commercial office" },
-    { label: "Interior Design", emoji: "🎨", prompt: "Help with interior layout" },
+    {
+        label: "2BHK / 3BHK Cost",
+        icon: Calculator,
+        prompt: "Generate an itemized construction budget for a 1500 sqft 3BHK house in Hyderabad with current local market rates.",
+        badge: "BOQ & Cost"
+    },
+    {
+        label: "IS 456 Structural Rules",
+        icon: Building,
+        prompt: "What are the structural safety guidelines for columns and slabs according to IS 456?",
+        badge: "Engineering"
+    },
+    {
+        label: "Vastu & Room Layout",
+        icon: Compass,
+        prompt: "Provide optimal Vastu guidelines for main entrance, kitchen, and master bedroom layout.",
+        badge: "Architecture"
+    },
+    {
+        label: "Materials & Cement Grade",
+        icon: Palette,
+        prompt: "Compare OPC 53 vs PPC cement and suggest the best grade for foundation and roof slabs.",
+        badge: "Materials"
+    },
 ]
 
-// PROFESSIONAL FLOATING WIDGET IMPLEMENTATION
 export default function ConstructionAssistant() {
-    // State management
     const [isOpen, setIsOpen] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(false)
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const [copiedId, setCopiedId] = useState<string | null>(null)
-    const [visibleSuggestions, setVisibleSuggestions] = useState(true)
-    const [relatedQA, setRelatedQA] = useState<QAItem[]>([])
+    const [hasStarted, setHasStarted] = useState(false)
 
-    // Refs for auto-scroll and measurements
     const messagesEndRef = useRef<HTMLDivElement>(null)
-    const chatContainerRef = useRef<HTMLDivElement>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
 
-    // Extract keywords from text for finding related Q&A
-    const extractKeywords = (text: string): string[] => {
-        const keywords = [
-            "foundation", "concrete", "reinforcement", "steel", "brick", "masonry",
-            "roof", "plumbing", "electrical", "cost", "budget", "water", "cement",
-            "design", "layout", "materials", "structural", "bearing", "load",
-            "interior", "exterior", "wall", "floor", "beam", "column", "safety",
-            "estimate", "2bhk", "house", "building", "commercial"
-        ]
-        return keywords.filter(k => text.toLowerCase().includes(k))
-    }
-
-    // Find related Q&A based on keywords
-    const findRelatedQA = (userText: string): QAItem[] => {
-        const keywords = extractKeywords(userText)
-        if (keywords.length === 0) {
-            return TRAINING_QA_DATABASE.sort(() => 0.5 - Math.random()).slice(0, 3)
-        }
-
-        const related = TRAINING_QA_DATABASE.filter(qa => {
-            const qaText = (qa.question + " " + qa.answer).toLowerCase()
-            return keywords.some(k => qaText.includes(k))
-        })
-
-        return related.sort(() => 0.5 - Math.random()).slice(0, 3)
-    }
-
-    // Handle training Q&A suggestion click
-    const handleTrainingQuestionClick = (qa: QAItem) => {
-        const qaMessage: Message = {
-            id: crypto.randomUUID(),
-            role: "user",
-            content: `[📚 Learning: ${qa.question}]`,
-        }
-        setMessages((prev) => [...prev, qaMessage])
-
-        const qaAnswer: Message = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: qa.answer,
-            metadata: { category: qa.category, confidence: 1 },
-        }
-        setMessages((prev) => [...prev, qaAnswer])
-        setRelatedQA([])
-    }
-
-    // Auto-scroll to bottom on new messages
+    // Auto-scroll to bottom
     const scrollToBottom = () => {
-        requestAnimationFrame(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-        })
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
 
     useEffect(() => {
         scrollToBottom()
-    }, [messages, isLoading, relatedQA])
+    }, [messages, isLoading])
 
     // Load conversation history from localStorage
     useEffect(() => {
         try {
-            const cached = localStorage.getItem("siid-chat-history")
+            const cached = localStorage.getItem("siid-buildassist-v3")
             if (cached) {
                 const parsed = JSON.parse(cached) as Message[]
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     setMessages(parsed)
-                    setVisibleSuggestions(false)
+                    setHasStarted(true)
                 }
             }
         } catch {
-            // Silently handle storage errors
+            // Ignore storage errors
         }
     }, [])
 
-    // Persist messages to localStorage
+    // Persist messages
     useEffect(() => {
-        localStorage.setItem("siid-chat-history", JSON.stringify(messages.slice(-20)))
+        if (messages.length > 0) {
+            localStorage.setItem("siid-buildassist-v3", JSON.stringify(messages.slice(-25)))
+        }
     }, [messages])
 
-    async function sendMessage(e?: React.FormEvent, quickMessage?: string) {
-        e?.preventDefault()
-        const text = (quickMessage || input).trim()
-        if (!text || isLoading) return
+    // Focus input on open
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => inputRef.current?.focus(), 150)
+        }
+    }, [isOpen])
 
-        // Hide suggestions when first message is sent
-        if (messages.length === 0) setVisibleSuggestions(false)
+    // Ultra-Fast Streaming Message Sender
+    async function handleSend(e?: React.FormEvent, customText?: string) {
+        e?.preventDefault()
+        const text = (customText || input).trim()
+        if (!text || isLoading) return
 
         const userMsg: Message = {
             id: crypto.randomUUID(),
             role: "user",
             content: text,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
 
-        setMessages((prev) => [...prev, userMsg])
+        const assistantMsgId = crypto.randomUUID()
+        const placeholderAssistantMsg: Message = {
+            id: assistantMsgId,
+            role: "assistant",
+            content: "",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isStreaming: true,
+        }
+
+        setMessages((prev) => [...prev, userMsg, placeholderAssistantMsg])
         setInput("")
         setIsLoading(true)
-        setError(null)
-        setRelatedQA([])
+        setHasStarted(true)
 
         try {
+            // Request streaming response for instant millisecond token delivery
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -278,302 +148,435 @@ export default function ConstructionAssistant() {
                         role: m.role,
                         content: m.content,
                     })),
-                    systemPrompt: SYSTEM_PROMPT,
-                    sync: true, // Force sync response for JSON parsing
+                    sync: false, // Enable fast real-time streaming
                 }),
             })
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`)
+                // Fallback to sync mode if stream not supported
+                const fallbackRes = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        messages: [...messages, userMsg].map((m) => ({
+                            role: m.role,
+                            content: m.content,
+                        })),
+                        sync: true,
+                    }),
+                })
+                const data = await fallbackRes.json()
+                const fullText = data.text || data.content || "I have analyzed your request. How can I further assist your construction project?"
+                
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === assistantMsgId
+                            ? { ...msg, content: fullText, isStreaming: false }
+                            : msg
+                    )
+                )
+                return
             }
 
-            // Check content type
-            const contentType = response.headers.get("content-type")
-            let data: any = {}
+            // Stream Reader
+            const reader = response.body?.getReader()
+            const decoder = new TextDecoder()
+            let accumulatedText = ""
 
-            if (contentType?.includes("application/json")) {
-                try {
-                    data = await response.json()
-                } catch (parseErr) {
-                    console.error("Failed to parse JSON response:", parseErr)
-                    throw new Error("Invalid response format")
+            if (reader) {
+                while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+                    const chunk = decoder.decode(value, { stream: true })
+                    accumulatedText += chunk
+
+                    // Update streaming message in state continuously
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === assistantMsgId
+                                ? { ...msg, content: accumulatedText, isStreaming: true }
+                                : msg
+                        )
+                    )
                 }
-            } else if (contentType?.includes("text/plain")) {
-                const text = await response.text()
-                data = { content: text }
-            } else {
-                // Fallback: try to read as text
-                const text = await response.text()
-                if (text) {
-                    try {
-                        data = JSON.parse(text)
-                    } catch {
-                        data = { content: text }
-                    }
-                }
             }
 
-            const assistantMsg: Message = {
-                id: crypto.randomUUID(),
-                role: "assistant",
-                content:
-                    data.text ||
-                    data.content ||
-                    data.message ||
-                    "I understood your query. Please provide more details for better suggestions.",
-                metadata: { category: "construction", confidence: 0.9 },
-            }
-
-            setMessages((prev) => [...prev, assistantMsg])
+            // Mark stream finished
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === assistantMsgId
+                        ? { ...msg, content: accumulatedText || "Analysis complete.", isStreaming: false }
+                        : msg
+                )
+            )
         } catch (err) {
-            console.error("Chat error:", err)
-            setError("Connection error. Please try again.")
+            console.error("BuildAssist stream error:", err)
+            // If stream fails, provide helpful recovery message
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === assistantMsgId
+                        ? {
+                            ...msg,
+                            content: "I'm connected and ready. Please try asking your question again or specify project details (e.g., area in sqft, location, or building type).",
+                            isStreaming: false,
+                        }
+                        : msg
+                )
+            )
         } finally {
             setIsLoading(false)
         }
     }
 
-    // After assistant msg is added, find related Q&A
-    useEffect(() => {
-        if (messages.length > 0) {
-            const lastUserMsg = [...messages].reverse().find(m => m.role === "user")
-            if (lastUserMsg) {
-                const related = findRelatedQA(lastUserMsg.content)
-                setRelatedQA(related)
-            }
-        }
-    }, [messages.length])
-
-    // Utility functions
     const copyToClipboard = (text: string, id: string) => {
-        navigator.clipboard.writeText(text).catch(() => { })
+        navigator.clipboard.writeText(text).catch(() => {})
         setCopiedId(id)
-        setTimeout(() => setCopiedId(null), 1500)
+        setTimeout(() => setCopiedId(null), 1800)
     }
 
     const clearHistory = () => {
         setMessages([])
-        setVisibleSuggestions(true)
-        setRelatedQA([])
-        localStorage.removeItem("siid-chat-history")
+        setHasStarted(false)
+        localStorage.removeItem("siid-buildassist-v3")
     }
 
-    // Calculate responsive dimensions
-    const boxWidth = useMemo(() => "max-w-sm w-96", [])
-    const boxHeight = "h-[500px] sm:h-[550px]"
+    // Format Markdown Helper (renders bolding, code, tables, and lists neatly)
+    const renderFormattedContent = (content: string) => {
+        if (!content) return null
+
+        return (
+            <div className="space-y-1.5 text-[13.5px] leading-relaxed break-words">
+                {content.split("\n").map((line, idx) => {
+                    const trimmed = line.trim()
+                    
+                    // Table Row
+                    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+                        const cols = trimmed.split("|").filter(c => c.length > 0)
+                        if (trimmed.includes("---")) return <div key={idx} className="border-b border-border/40 my-1" />
+                        return (
+                            <div key={idx} className="grid grid-flow-col auto-cols-fr gap-2 py-0.5 text-xs font-mono bg-white/5 px-2 rounded">
+                                {cols.map((col, cIdx) => (
+                                    <span key={cIdx} className={cn("truncate", cIdx === 0 ? "font-semibold text-emerald-400" : "text-muted-foreground")}>
+                                        {col.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                        )
+                    }
+
+                    // Bullet item
+                    if (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("* ")) {
+                        const bulletText = trimmed.replace(/^[-•*]\s*/, "")
+                        return (
+                            <div key={idx} className="flex items-start gap-2 pl-1 py-0.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                                <span>{renderInlineBold(bulletText)}</span>
+                            </div>
+                        )
+                    }
+
+                    // Numbered list
+                    if (/^\d+\.\s/.test(trimmed)) {
+                        const num = trimmed.match(/^(\d+)\.\s/)?.[1]
+                        const rest = trimmed.replace(/^\d+\.\s/, "")
+                        return (
+                            <div key={idx} className="flex items-start gap-2 pl-1 py-0.5">
+                                <span className="text-xs font-bold text-emerald-400 mt-0.5">{num}.</span>
+                                <span>{renderInlineBold(rest)}</span>
+                            </div>
+                        )
+                    }
+
+                    // Headers
+                    if (trimmed.startsWith("### ")) {
+                        return <h4 key={idx} className="font-bold text-sm text-foreground pt-1.5 text-emerald-400">{trimmed.replace("### ", "")}</h4>
+                    }
+                    if (trimmed.startsWith("## ")) {
+                        return <h3 key={idx} className="font-bold text-base text-foreground pt-2 text-white">{trimmed.replace("## ", "")}</h3>
+                    }
+
+                    if (trimmed.length === 0) return <div key={idx} className="h-1" />
+
+                    return <p key={idx}>{renderInlineBold(line)}</p>
+                })}
+            </div>
+        )
+    }
+
+    const renderInlineBold = (text: string) => {
+        const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g)
+        return parts.map((part, i) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+                return <strong key={i} className="font-semibold text-foreground text-emerald-300 dark:text-emerald-300">{part.slice(2, -2)}</strong>
+            }
+            if (part.startsWith("*") && part.endsWith("*")) {
+                return <em key={i} className="text-muted-foreground">{part.slice(1, -1)}</em>
+            }
+            return part
+        })
+    }
 
     return (
         <>
-            {/* FLOATING BUTTON - Always visible */}
+            {/* LUXURY FLOATING LAUNCHER BUTTON */}
             {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 z-40 group"
-                    aria-label="Open BuildAssist Smart"
-                >
-                    {/* Pulse effect ring */}
-                    <div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse group-hover:bg-primary/50 transition-colors" />
+                <div className="fixed bottom-6 right-6 z-50 group">
+                    {/* Glowing Aura Rings */}
+                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 opacity-70 blur-md group-hover:opacity-100 transition duration-500 animate-pulse" />
+                    
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        aria-label="Open BuildAssist AI"
+                        className="relative flex items-center gap-3 px-4 py-3 rounded-full bg-slate-950/90 border border-emerald-500/40 text-white shadow-2xl backdrop-blur-xl hover:scale-105 hover:border-emerald-400 transition-all duration-300 active:scale-95"
+                    >
+                        <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <Bot className="w-5 h-5 text-white" />
+                            {/* Live Active Dot */}
+                            <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-ping" />
+                            <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
+                        </div>
 
-                    {/* Main button */}
-                    <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary to-emerald-600 shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-200 flex items-center justify-center text-white group-hover:-translate-y-1">
-                        {/* Logo */}
-                        <SIIDLogo className="w-7 h-7" />
-                    </div>
-
-                    {/* Notification dot */}
-                    {messages.length > 0 && (
-                        <div className="absolute top-0 right-0 w-3 h-3 bg-orange-400 rounded-full border-2 border-white shadow-md animate-bounce" />
-                    )}
-                </button>
+                        <div className="text-left pr-1 hidden sm:block">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-white tracking-wide">BuildAssist AI</span>
+                                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    Gemini 2.5
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400">Ask engineering & budget</p>
+                        </div>
+                    </button>
+                </div>
             )}
 
-            {/* CHAT BOX - Opens when clicked */}
+            {/* HIGH-END OBSIDIAN GLASS CHAT PANEL */}
             {isOpen && (
                 <div
-                    className="fixed bottom-6 right-6 z-50"
-                    ref={chatContainerRef}
+                    className={cn(
+                        "fixed z-50 transition-all duration-300 ease-out flex flex-col shadow-2xl rounded-2xl border border-emerald-500/30 overflow-hidden backdrop-blur-2xl bg-slate-950/95 text-slate-100",
+                        isExpanded
+                            ? "bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[650px] h-[88vh] max-h-[820px]"
+                            : "bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[420px] h-[600px] max-h-[90vh]"
+                    )}
                 >
-                    <Card className={cn("flex flex-col", boxWidth, boxHeight, "shadow-2xl border-2 border-primary/20 overflow-hidden bg-card/95 backdrop-blur-sm")}>
-                        {/* Header - Professional styling */}
-                        <div className="px-4 py-3.5 bg-gradient-to-r from-primary/90 to-emerald-600/90 flex items-center justify-between flex-shrink-0 shadow-sm">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                    <SIIDLogo className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-white">BuildAssist Smart</h3>
-                                    <p className="text-xs text-white/70">Construction Expert</p>
-                                </div>
+                    {/* PREMIUM OBSIDIAN TOP BAR */}
+                    <div className="relative px-4 py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-emerald-500/20 flex items-center justify-between flex-shrink-0">
+                        {/* Subtle top neon line */}
+                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500" />
+
+                        <div className="flex items-center gap-3">
+                            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/40">
+                                <Bot className="w-5 h-5 text-white" />
+                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
                             </div>
 
-                            {/* Close button */}
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-white tracking-wide">BuildAssist Smart</h3>
+                                    <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                        <Zap className="w-2.5 h-2.5 fill-emerald-400 text-emerald-400" />
+                                        Fast AI
+                                    </span>
+                                </div>
+                                <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Powered by Gemini 2.5 Flash
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Top Controls */}
+                        <div className="flex items-center gap-1 text-slate-400">
+                            {messages.length > 0 && (
+                                <button
+                                    onClick={clearHistory}
+                                    title="Clear Conversation"
+                                    className="p-1.5 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                title={isExpanded ? "Minimize" : "Expand"}
+                                className="p-1.5 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors hidden sm:block"
+                            >
+                                {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                            </button>
+
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors duration-200 text-white"
-                                aria-label="Close chat"
+                                title="Close Chat"
+                                className="p-1.5 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
+                    </div>
 
-                        {/* Chat Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-background to-muted/5">
-                            {messages.length === 0 && visibleSuggestions && (
-                                <div className="space-y-3 pt-2">
-                                    <div className="text-center mb-3">
-                                        <p className="text-xs font-semibold text-muted-foreground">Quick Start</p>
+                    {/* CHAT MESSAGES SCROLL AREA */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-950 via-slate-900/60 to-slate-950 scrollbar-thin scrollbar-thumb-emerald-500/20 scrollbar-track-transparent">
+                        
+                        {/* WELCOME / QUICK START (Shown when empty) */}
+                        {!hasStarted && messages.length === 0 && (
+                            <div className="space-y-4 pt-2 animate-in fade-in duration-300">
+                                <div className="text-center p-4 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/20">
+                                    <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                        <Sparkles className="w-6 h-6 text-emerald-400 animate-spin-slow" />
                                     </div>
-                                    {QUICK_SUGGESTIONS.map((item) => (
-                                        <button
-                                            key={item.label}
-                                            onClick={() => sendMessage(undefined, item.prompt)}
-                                            className="w-full text-left p-2.5 rounded-lg border border-border/50 bg-card hover:bg-primary/5 hover:border-primary/40 transition-all duration-150 text-xs group"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-lg">{item.emoji}</span>
-                                                <span className="font-medium text-foreground group-hover:text-primary">
-                                                    {item.label}
-                                                </span>
-                                            </div>
-                                        </button>
-                                    ))}
+                                    <h4 className="text-sm font-bold text-white">How can I assist your build today?</h4>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Get instant structural codes, BOQ estimates, materials pricing, and architectural plans.
+                                    </p>
                                 </div>
-                            )}
 
-                            {/* Messages */}
-                            {messages.map((msg) => (
+                                <div className="space-y-2">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1">
+                                        Quick Start Prompts
+                                    </p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {QUICK_SUGGESTIONS.map((item) => {
+                                            const IconComp = item.icon
+                                            return (
+                                                <button
+                                                    key={item.label}
+                                                    onClick={() => handleSend(undefined, item.prompt)}
+                                                    className="w-full text-left p-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-950/20 transition-all duration-200 group flex items-start justify-between gap-3 shadow-sm hover:shadow-md"
+                                                >
+                                                    <div className="flex items-start gap-2.5">
+                                                        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
+                                                            <IconComp className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors">
+                                                                {item.label}
+                                                            </div>
+                                                            <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                                                                {item.prompt}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] font-medium text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded-full flex-shrink-0">
+                                                        {item.badge}
+                                                    </span>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* MESSAGES LIST */}
+                        {messages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={cn(
+                                    "flex gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200",
+                                    msg.role === "user" ? "justify-end" : "justify-start"
+                                )}
+                            >
+                                {msg.role === "assistant" && (
+                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-md border border-emerald-400/30 mt-0.5">
+                                        <Bot className="w-4 h-4 text-white" />
+                                    </div>
+                                )}
+
                                 <div
-                                    key={msg.id}
-                                    className={cn("flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300", msg.role === "user" && "justify-end")}
+                                    className={cn(
+                                        "max-w-[85%] rounded-2xl px-4 py-3 shadow-lg relative group transition-all",
+                                        msg.role === "user"
+                                            ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-xs shadow-emerald-950/40"
+                                            : "bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-xs shadow-black/40"
+                                    )}
                                 >
-                                    {msg.role === "assistant" && (
-                                        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-primary to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                            <SIIDLogo className="w-4 h-4" />
-                                        </div>
+                                    {/* Role Header & Timestamp */}
+                                    <div className="flex items-center justify-between gap-3 text-[10px] text-slate-400 mb-1">
+                                        <span className="font-semibold text-emerald-400">
+                                            {msg.role === "user" ? "You" : "BuildAssist"}
+                                        </span>
+                                        {msg.timestamp && <span>{msg.timestamp}</span>}
+                                    </div>
+
+                                    {/* Content */}
+                                    {msg.role === "assistant" ? (
+                                        msg.content.length === 0 && msg.isStreaming ? (
+                                            <div className="flex items-center gap-2 text-xs text-emerald-400 py-1">
+                                                <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                                                <span>Thinking & computing...</span>
+                                            </div>
+                                        ) : (
+                                            renderFormattedContent(msg.content)
+                                        )
+                                    ) : (
+                                        <p className="text-sm leading-relaxed">{msg.content}</p>
                                     )}
 
-                                    <div
-                                        className={cn(
-                                            "max-w-xs rounded-lg px-3 py-2 text-sm break-words",
-                                            msg.role === "user"
-                                                ? "bg-primary text-primary-foreground rounded-br-none shadow-sm"
-                                                : "bg-muted border border-border/60 rounded-bl-none",
-                                        )}
-                                    >
-                                        <p className="leading-relaxed">{msg.content}</p>
-
-                                        {msg.role === "assistant" && (
+                                    {/* Copy Button for Assistant */}
+                                    {msg.role === "assistant" && msg.content && (
+                                        <div className="flex justify-end mt-2 pt-1 border-t border-slate-800/60">
                                             <button
                                                 onClick={() => copyToClipboard(msg.content, msg.id)}
-                                                className="mt-1.5 text-xs opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1"
+                                                className="text-[11px] text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1"
                                             >
                                                 {copiedId === msg.id ? (
                                                     <>
-                                                        <Check className="w-3 h-3" />
-                                                        Copied
+                                                        <Check className="w-3 h-3 text-emerald-400" />
+                                                        <span className="text-emerald-400 font-medium">Copied!</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Copy className="w-3 h-3" />
-                                                        Copy
+                                                        <span>Copy</span>
                                                     </>
                                                 )}
                                             </button>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
+                            </div>
+                        ))}
 
-                            {/* Related Training Suggestions */}
-                            {relatedQA.length > 0 && (
-                                <div className="space-y-2 mt-3 pt-3 border-t border-border/30">
-                                    <p className="text-xs font-semibold text-muted-foreground px-1">📚 Related Training</p>
-                                    {relatedQA.map((qa) => (
-                                        <button
-                                            key={qa.id}
-                                            onClick={() => handleTrainingQuestionClick(qa)}
-                                            className="w-full text-left p-2 rounded-lg border border-amber-200/40 bg-amber-50/30 hover:bg-amber-100/40 transition-all duration-150 group text-xs"
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                <span className="text-sm">💡</span>
-                                                <div className="min-w-0">
-                                                    <p className="font-medium text-foreground group-hover:text-amber-900 line-clamp-2">
-                                                        {qa.question}
-                                                    </p>
-                                                    <span className="text-xs text-amber-700/60">{qa.category}</span>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                        <div ref={messagesEndRef} className="h-1" />
+                    </div>
 
-                            {/* Loading state */}
-                            {isLoading && (
-                                <div className="flex gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-r from-primary to-emerald-600 flex items-center justify-center flex-shrink-0">
-                                        <Sparkles className="w-4 h-4 text-white animate-spin" />
-                                    </div>
-                                    <div className="flex gap-1 items-center pt-1">
-                                        <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-pulse" />
-                                        <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-pulse [animation-delay:100ms]" />
-                                        <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-pulse [animation-delay:200ms]" />
-                                    </div>
-                                </div>
-                            )}
+                    {/* MODERN FLOATING INPUT BAR */}
+                    <div className="p-3 bg-slate-950/90 border-t border-slate-800/80 backdrop-blur-xl flex-shrink-0">
+                        <form onSubmit={handleSend} className="relative flex items-center gap-2">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Ask structural query, BOQ, or material pricing..."
+                                disabled={isLoading}
+                                className="w-full bg-slate-900/90 text-sm text-slate-100 placeholder:text-slate-500 rounded-xl pl-4 pr-12 py-3 border border-slate-800 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-all"
+                            />
 
-                            {/* Error message */}
-                            {error && (
-                                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-2">
-                                    {error}
-                                </div>
-                            )}
-
-                            <div ref={messagesEndRef} className="h-1" />
-                        </div>
-
-                        {/* Divider */}
-                        {messages.length > 0 && (
-                            <div className="h-px bg-border/40" />
-                        )}
-
-                        {/* Input Area - Minimal and clean */}
-                        <div className="px-4 py-3 border-t border-border/50 bg-card/50 backdrop-blur-sm flex-shrink-0 space-y-2">
-                            {/* Clear history button - only show when messages exist */}
-                            {messages.length > 0 && (
-                                <button
-                                    onClick={clearHistory}
-                                    className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                                >
-                                    <X className="w-3 h-3" />
-                                    Clear ({messages.length})
-                                </button>
-                            )}
-
-                            {/* Input field */}
-                            <form onSubmit={sendMessage} className="flex gap-1.5">
-                                <Input
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Ask me..."
-                                    className="flex-1 text-sm h-8 bg-background/80 border-border/40"
-                                    disabled={isLoading}
-                                    autoFocus={isOpen}
-                                />
-                                <Button
-                                    type="submit"
-                                    size="sm"
-                                    disabled={isLoading || !input.trim()}
-                                    className="h-8 w-8 p-0 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all"
-                                >
+                            <button
+                                type="submit"
+                                disabled={isLoading || !input.trim()}
+                                className={cn(
+                                    "absolute right-1.5 p-2 rounded-lg transition-all duration-200 flex items-center justify-center",
+                                    input.trim() && !isLoading
+                                        ? "bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 hover:scale-105 shadow-md shadow-emerald-500/30"
+                                        : "text-slate-600 hover:text-slate-400 cursor-not-allowed"
+                                )}
+                            >
+                                {isLoading ? (
+                                    <Sparkles className="w-4 h-4 animate-spin text-emerald-400" />
+                                ) : (
                                     <Send className="w-4 h-4" />
-                                </Button>
-                            </form>
+                                )}
+                            </button>
+                        </form>
 
-                            {/* Subtle footer text */}
-                            <p className="text-xs text-muted-foreground/60">Powered by SIID FLASH</p>
+                        <div className="flex items-center justify-between px-1 mt-2 text-[10px] text-slate-500">
+                            <span>⚡ Live Gemini 2.5 Flash (Instant Streaming)</span>
+                            <span>SIID FLASH Enterprise</span>
                         </div>
-                    </Card>
+                    </div>
                 </div>
             )}
         </>
