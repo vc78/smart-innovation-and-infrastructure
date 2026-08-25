@@ -154,7 +154,11 @@
 
     /* Aspect ratio containers */
     .aspect-video-responsive {
-        @apply relative w-full bg-muted rounded-lg overflow-hidden;
+        position: relative;
+        width: 100%;
+        background-color: var(--color-muted, #f5f7fb);
+        border-radius: 0.5rem;
+        overflow: hidden;
         aspect-ratio: 16 / 9;
     }
 }
