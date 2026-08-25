@@ -2,7 +2,10 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { Card } from "@/components/ui/card"
-import { Calculator, Zap, CheckCircle2, ChevronRight, BarChart3, Clock, MapPin, Box, Compass, Droplets, ShieldCheck, Factory } from "lucide-react"
+import { Calculator, Zap, CheckCircle2, ChevronRight, BarChart3, Clock, MapPin, Box, Compass, Droplets, ShieldCheck, Factory, Download, FileText, Sparkles, Loader2 } from "lucide-react"
+import { generateMaterialReportPDF } from "@/lib/material-pdf-export"
+import { getCurrentUser } from "@/lib/auth"
+import { toast } from "sonner"
 
 const GRADES = ["Economy", "Standard", "Premium", "Luxury"];
 const DIRECTIONS = ["North", "East", "West", "South"];
@@ -170,6 +173,7 @@ export function MaterialCalculator() {
   const [maxBudget, setMaxBudget] = useState("8000000");
 
   const [loading, setLoading] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
 
@@ -220,6 +224,96 @@ export function MaterialCalculator() {
     }
   }, [length, width, floors, city, grade, direction, soil, cement, steel, beds, baths, kitchenType, archStyle, amenities, compliances, minBudget, maxBudget, plotArea]);
 
+  const downloadProjectPDF = async () => {
+    if (!result) {
+      toast.error("Please generate or wait for the project estimate first.");
+      return;
+    }
+
+    setDownloadingPDF(true);
+    const toastId = toast.loading("Processing project data with Gemini AI Engine...");
+
+    try {
+      const user = getCurrentUser();
+      const projectPayload = {
+        length,
+        width,
+        plotArea,
+        builtUpArea: result.builtUpArea || plotArea * 0.85 * parseInt(floors),
+        floors,
+        city,
+        grade,
+        direction,
+        soil,
+        cement,
+        steel,
+        beds,
+        baths,
+        kitchenType,
+        archStyle,
+        amenities: Array.from(amenities),
+        compliances: Array.from(compliances),
+        minBudget,
+        maxBudget,
+        result,
+      };
+
+      // Call AI document processing endpoint powered by Gemini
+      const aiRes = await fetch("/api/process-project-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectDetails: {
+            length,
+            width,
+            plotArea,
+            builtUpArea: result.builtUpArea || plotArea * 0.85 * parseInt(floors),
+            floors,
+            city,
+            grade,
+            direction,
+            soil,
+            cement,
+            steel,
+            beds,
+            baths,
+            kitchenType,
+            archStyle,
+            amenities: Array.from(amenities),
+            compliances: Array.from(compliances),
+          },
+          materialQuantities: result.materials,
+          financialBreakdown: {
+            ...result.breakdown,
+            totalCostFormatted: fmtL(result.totalCost),
+          },
+          userInfo: user ? { name: user.name, email: user.email } : null,
+        }),
+      });
+
+      let aiAnalysis = null;
+      if (aiRes.ok) {
+        const aiJson = await aiRes.json();
+        aiAnalysis = aiJson.data;
+      }
+
+      toast.loading("Generating your verified Project Manifest PDF...", { id: toastId });
+
+      const fileName = await generateMaterialReportPDF(
+        projectPayload,
+        aiAnalysis,
+        user ? { name: user.name, email: user.email } : null
+      );
+
+      toast.success(`Downloaded ${fileName} successfully!`, { id: toastId });
+    } catch (e: any) {
+      console.error("PDF generation failed:", e);
+      toast.error(e.message || "Failed to generate PDF report", { id: toastId });
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
        if (plotArea > 0) runEstimate();
@@ -246,6 +340,25 @@ export function MaterialCalculator() {
              <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
              AI Calibrated
            </div>
+           {result && (
+             <button
+               onClick={downloadProjectPDF}
+               disabled={downloadingPDF}
+               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-full shadow-sm hover:shadow transition-all disabled:opacity-50"
+             >
+               {downloadingPDF ? (
+                 <>
+                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                   <span>Processing PDF...</span>
+                 </>
+               ) : (
+                 <>
+                   <Download className="w-3.5 h-3.5" />
+                   <span>Download PDF</span>
+                 </>
+               )}
+             </button>
+           )}
         </div>
       </div>
 
@@ -324,13 +437,35 @@ export function MaterialCalculator() {
             </Field>
           </section>
 
-          <button
-            onClick={runEstimate}
-            disabled={loading || !plotArea}
-            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-xl shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-          >
-            {loading ? (<>Computing Intelligent Estimate <StreamingDots /></>) : "⚡ Generate AI Project Manifest"}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={runEstimate}
+              disabled={loading || !plotArea}
+              className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg shadow-xl shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              {loading ? (<>Computing Intelligent Estimate <StreamingDots /></>) : "⚡ Generate AI Project Manifest"}
+            </button>
+
+            {result && (
+              <button
+                onClick={downloadProjectPDF}
+                disabled={downloadingPDF}
+                className="h-14 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-xl shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+              >
+                {downloadingPDF ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Processing Document...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    <span>Download PDF</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* RIGHT PANEL: RESULTS */}

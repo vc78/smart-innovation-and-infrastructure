@@ -14,18 +14,24 @@ import {
   Construction,
   Layers,
   Zap,
-  Droplets
+  Droplets,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AuthGuard } from "@/components/auth-guard"
+import { generateMaterialReportPDF } from "@/lib/material-pdf-export"
+import { getCurrentUser } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function MaterialCalculatorPage() {
   const params = useParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [downloadingPDF, setDownloadingPDF] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000)
+    const timer = setTimeout(() => setLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
 
@@ -37,11 +43,119 @@ export default function MaterialCalculatorPage() {
     { name: "Plumbing", amount: "1.8 km", cost: "₹0.6M", progress: 5, icon: Droplets, color: "text-cyan-500" }
   ]
 
+  const handleExportPDF = async () => {
+    setDownloadingPDF(true)
+    const toastId = toast.loading("Processing project data with Gemini AI Engine...")
+
+    try {
+      const user = getCurrentUser()
+      const projectPayload = {
+        length: 50,
+        width: 40,
+        plotArea: 2000,
+        builtUpArea: 3400,
+        floors: 2,
+        city: "Hyderabad",
+        grade: "Premium",
+        direction: "North-East",
+        soil: "Red Loamy Soil",
+        cement: "OPC 53 Grade (High Strength)",
+        steel: "Fe 550D TMT Rebar",
+        beds: 4,
+        baths: 4,
+        kitchenType: "Modular Island",
+        archStyle: "Modern / Contemporary",
+        amenities: ["Home Office", "Terrace Garden", "Smart Automation", "Solar Panels"],
+        compliances: ["Vastu Compliance", "Green Building Certification", "Fire Safety NOC"],
+        result: {
+          totalCost: 9200000,
+          costPerSqFt: 2705,
+          timeline: "9-11 Months",
+          feasibility: "Within Target Budget",
+          breakdown: {
+            base_structure: 5200000,
+            finishes_and_interiors: 1800000,
+            amenities: 950000,
+            mep_services: 650000,
+            site_development: 200000,
+            statutory_and_gst: 400000,
+          },
+          materials: {
+            "Cement (OPC 53)": "1,150 bags — ₹4,48,500",
+            "Structural Steel (Fe 550D)": "11,200 kg — ₹7,28,000",
+            "M-Sand (Zone II)": "5,400 cft — ₹2,59,200",
+            "Red Bricks / AAC": "42,000 nos — ₹3,78,000",
+            "Coarse Aggregate (20mm)": "3,900 cft — ₹1,63,800",
+            "Ready Mix Concrete (M25)": "145 m³ — ₹6,23,500",
+          },
+          alerts: [
+            "Soil bearing capacity is optimal for isolated footings with tie beams.",
+            "Phased procurement of Fe 550D steel recommended to prevent on-site corrosion.",
+          ],
+        },
+      }
+
+      // Call Gemini document processing endpoint
+      const aiRes = await fetch("/api/process-project-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectDetails: {
+            length: 50,
+            width: 40,
+            plotArea: 2000,
+            builtUpArea: 3400,
+            floors: 2,
+            city: "Hyderabad",
+            grade: "Premium",
+            direction: "North-East",
+            soil: "Red Loamy Soil",
+            cement: "OPC 53 Grade",
+            steel: "Fe 550D TMT",
+            beds: 4,
+            baths: 4,
+            kitchenType: "Modular Island",
+            archStyle: "Modern / Contemporary",
+            amenities: ["Home Office", "Terrace Garden", "Smart Automation", "Solar Panels"],
+            compliances: ["Vastu Compliance", "Green Building", "Fire Safety"],
+          },
+          materialQuantities: projectPayload.result.materials,
+          financialBreakdown: {
+            ...projectPayload.result.breakdown,
+            totalCostFormatted: "₹ 92.00 Lakhs",
+          },
+          userInfo: user ? { name: user.name, email: user.email } : null,
+        }),
+      })
+
+      let aiAnalysis = null
+      if (aiRes.ok) {
+        const aiJson = await aiRes.json()
+        aiAnalysis = aiJson.data
+      }
+
+      toast.loading("Generating Project Manifest PDF...", { id: toastId })
+
+      const fileName = await generateMaterialReportPDF(
+        projectPayload,
+        aiAnalysis,
+        user ? { name: user.name, email: user.email } : null
+      )
+
+      toast.success(`Downloaded ${fileName} successfully!`, { id: toastId })
+    } catch (e: any) {
+      console.error("PDF export error:", e)
+      toast.error(e.message || "Failed to export PDF", { id: toastId })
+    } finally {
+      setDownloadingPDF(false)
+    }
+  }
+
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-950 text-slate-200 p-8">
+      <div className="min-h-screen bg-slate-950 text-slate-200 p-4 sm:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <header className="flex items-center justify-between">
+          <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
@@ -52,21 +166,30 @@ export default function MaterialCalculatorPage() {
                 <ArrowLeft className="w-6 h-6" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                  <Calculator className="w-8 h-8 text-blue-500" />
+                <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+                  <Calculator className="w-7 h-7 sm:w-8 sm:h-8 text-blue-500" />
                   Material Intelligence
                 </h1>
-                <p className="text-slate-400">AI-powered estimation and procurement tracking</p>
+                <p className="text-xs sm:text-sm text-slate-400">AI-powered estimation and procurement tracking</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-900">
-                <History className="w-4 h-4 mr-2" />
-                History
-              </Button>
-              <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20">
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button 
+                onClick={handleExportPDF}
+                disabled={downloadingPDF}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 flex items-center gap-2"
+              >
+                {downloadingPDF ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing Document...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span>Export Manifest (PDF)</span>
+                  </>
+                )}
               </Button>
             </div>
           </header>
@@ -107,8 +230,8 @@ export default function MaterialCalculatorPage() {
                      </div>
                      <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-center">
-                           <h3 className="font-bold text-white uppercase tracking-tight">{m.name}</h3>
-                           <span className="text-sm font-mono text-slate-400">{m.amount} | {m.cost}</span>
+                            <h3 className="font-bold text-white uppercase tracking-tight">{m.name}</h3>
+                            <span className="text-sm font-mono text-slate-400">{m.amount} | {m.cost}</span>
                         </div>
                         <Progress value={m.progress} className="h-2 bg-slate-950" />
                      </div>
