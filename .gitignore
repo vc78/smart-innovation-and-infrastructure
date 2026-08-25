@@ -40,9 +40,12 @@ __pycache__/
 venv/
 .venv/
 
-# Large Media Files
-public/uploads/p2.mp4
-public/uploads/p3.mp4
+# Ignore Large Media Files > 50MB (Exceeds GitHub pre-receive limits)
+frontend/public/images/p2.mp4
+frontend/public/uploads/p2.mp4
+frontend/public/images/p3.mp4
+frontend/public/uploads/p3.mp4
 public/images/p2.mp4
+public/uploads/p2.mp4
 public/images/p3.mp4
-public/images/15001452_2160_3840_60fps.mp4
+public/uploads/p3.mp4
