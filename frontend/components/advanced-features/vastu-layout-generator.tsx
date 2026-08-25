@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,17 +14,23 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  FileImage,
   RefreshCw,
   ChevronRight,
   ChevronLeft,
   Sparkles,
+  Zap,
+  Loader2,
+  Layers,
+  ShieldCheck,
+  Palette,
+  Sun,
+  Wind,
+  Flame,
+  Droplets,
+  Mountain,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateProfessionalDocument } from "@/lib/document-template"
-import { VASTU_DATASET } from "./vastu-knowledge-base"
-import { predictVastuCompliance, predictOverallScore } from "./vastu-ml-engine"
-
 
 interface VastuInput {
   constructionType: string
@@ -41,42 +46,50 @@ interface VastuInput {
   climaticZone: string
 }
 
-interface VastuRule {
+interface BlueprintRoom {
+  id: string
   name: string
-  direction: string
-  status: "compliant" | "warning" | "non-compliant"
-  priority: "must-follow" | "recommended" | "advisory"
-  suggestion: string
-  remedy?: string
+  x: number
+  y: number
+  w: number
+  h: number
+  zone: string
+  color: string
+  textColor: string
 }
 
-interface VastuLayout {
-  score: number
-  category: string
-  rooms: VastuRule[]
-  features: {
-    name: string
-    status: "pass" | "warning" | "fail"
-    description: string
-  }[]
-  doshas: {
-    name: string
-    severity: "high" | "medium" | "low"
-    remedy: string
-  }[]
-  colorRecommendations: {
+interface VastuApiResponse {
+  overallScore: number
+  vastuCategory: string
+  executiveSummary: string
+  elementalBalance: {
+    waterNE: { status: string; score: number; element: string; recommendation: string }
+    fireSE: { status: string; score: number; element: string; recommendation: string }
+    earthSW: { status: string; score: number; element: string; recommendation: string }
+    airNW: { status: string; score: number; element: string; recommendation: string }
+    spaceCenter: { status: string; score: number; element: string; recommendation: string }
+  }
+  roomAudits: {
     room: string
-    colors: string[]
+    zone: string
+    status: "compliant" | "warning" | "non-compliant"
+    score: number
+    impact: string
+    scientificReason: string
+    remedy: string | null
   }[]
-  layoutMap: string
+  blueprintRooms: BlueprintRoom[]
+  doshas: { name: string; severity: "high" | "medium" | "low"; remedy: string }[]
+  remedies: { title: string; description: string }[]
+  colorTherapy: { zone: string; colors: string[] }[]
 }
 
 export function VastuLayoutGenerator() {
   const [step, setStep] = useState(1)
   const [inputs, setInputs] = useState<VastuInput>({
-    constructionType: "house",
-    floors: "G",
-    builtUpArea: "",
+    constructionType: "villa",
+    floors: "G+1",
+    builtUpArea: "2400 sq.ft",
     plotLength: 40,
     plotWidth: 30,
     plotArea: 1200,
@@ -86,7 +99,9 @@ export function VastuLayoutGenerator() {
     neighborHeight: "ground",
     climaticZone: "moderate",
   })
-  const [layout, setLayout] = useState<VastuLayout | null>(null)
+  const [aiData, setAiData] = useState<VastuApiResponse | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isOptimizing, setIsOptimizing] = useState(false)
   const { toast } = useToast()
 
   const updateDimensions = (field: "plotLength" | "plotWidth", value: number) => {
@@ -95,1041 +110,465 @@ export function VastuLayoutGenerator() {
     setInputs(newInputs)
   }
 
-  const vastuRuleEngine = () => {
-    const { constructionType, facing } = inputs
-
-    // Core layout rules inspired by the Knowledge Base and calculated via ML engine
-    const dataset = VASTU_DATASET[constructionType] || VASTU_DATASET.house
-    const computedRules: VastuRule[] = []
-
-    // Helper to map grid (r,c) to direction string for ML engine
-    const getDirection = (r: number, c: number): string => {
-      if (r === 0 && c === 0) return "Northwest"
-      if (r === 0 && c === 1) return "North"
-      if (r === 0 && c === 2) return "Northeast"
-      if (r === 1 && c === 0) return "West"
-      if (r === 1 && c === 1) return "North" // Brahmasthan acts as center-north
-      if (r === 1 && c === 2) return "East"
-      if (r === 2 && c === 0) return "Southwest"
-      if (r === 2 && c === 1) return "South"
-      if (r === 2 && c === 2) return "Southeast"
-      return "North"
-    }
-
-    // Iterate through dataset to generate rules dynamically
-    for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 3; c++) {
-        const item = dataset[r][c]
-        const dir = getDirection(r, c)
-        const mlResult = predictVastuCompliance(item.title, dir)
-
-        computedRules.push({
-          name: item.title,
-          direction: dir,
-          status: mlResult.status,
-          priority: item.title.includes("Master") || item.title.includes("Kitchen") || item.title.includes("Entrance") ? "must-follow" : "recommended",
-          suggestion: item.description,
-          remedy: mlResult.status !== "compliant" ? `Consult Vastu expert for ${item.title} adjustment` : undefined
-        })
-      }
-    }
-
-    // Add facing-specific entrance rule
-    computedRules.push({
-      name: "Main Entrance",
-      direction: facing.charAt(0).toUpperCase() + facing.slice(1),
-      status: ["north", "east", "northeast"].includes(facing) ? "compliant" : "warning",
-      priority: "must-follow",
-      suggestion: `Entrance facing ${facing} brings unique energy characteristics to the ${constructionType}.`,
-      remedy: !["north", "east", "northeast"].includes(facing) ? "Install a silver strip at the threshold or place Vastu pyramids." : undefined
-    })
-
-    return computedRules
-  }
-
-  const analyzeAdvancedFeatures = () => {
-    const features = [
-      {
-        name: "Ventilation & Airflow",
-        status: "pass" as const,
-        description: "Windows positioned in North and East for optimal cross-ventilation",
-      },
-      {
-        name: "Sunlight Penetration",
-        status: "pass" as const,
-        description: "Maximum natural light from East and North directions",
-      },
-      {
-        name: "Window Positioning",
-        status: "pass" as const,
-        description: "Large windows in North and East, smaller in South and West",
-      },
-      {
-        name: "Water Source (Borewell)",
-        status: "pass" as const,
-        description: "Borewell positioned in Northeast for water energy",
-      },
-      {
-        name: "Overhead Water Tank",
-        status: "pass" as const,
-        description: "Tank placed in Southwest for structural stability",
-      },
-      {
-        name: "Sump Placement",
-        status: "pass" as const,
-        description: "Underground sump in Northeast or North",
-      },
-      {
-        name: "Septic Tank Location",
-        status: "pass" as const,
-        description: "Septic tank in Northwest, away from Northeast",
-      },
-      {
-        name: "Setback Compliance",
-        status: inputs.openSpaces !== "none" ? ("pass" as const) : ("warning" as const),
-        description: "Adequate open space around building as per local regulations",
-      },
-      {
-        name: "Compound Wall Height",
-        status: "pass" as const,
-        description: "South and West walls higher than North and East",
-      },
-      {
-        name: "Parking Area",
-        status: "pass" as const,
-        description: "Parking in Northwest or Southeast corner",
-      },
-      {
-        name: "Floor-wise Zoning",
-        status: "pass" as const,
-        description: `${inputs.floors} floor plan optimized for vertical energy flow`,
-      },
-      {
-        name: "Multi-floor Energy Flow",
-        status: "pass" as const,
-        description: "Staircase and lift placement ensures smooth energy transition",
-      },
-      {
-        name: "Energy Balance",
-        status: "pass" as const,
-        description: "Five elements (Panch Tatva) properly balanced",
-      },
-      {
-        name: "Heat Flow Management",
-        status: "pass" as const,
-        description: "Heat-generating elements in Southeast, cooling in Northeast",
-      },
-      {
-        name: "Sacred Geometry",
-        status: "pass" as const,
-        description: "Plot proportions follow Vastu Purusha Mandala principles",
-      },
-      {
-        name: "Directional Significance",
-        status: "pass" as const,
-        description: "All eight directions utilized as per their ruling deities",
-      },
-      {
-        name: "Prosperity Zones",
-        status: "pass" as const,
-        description: "North (Kubera) zone kept light and open for wealth",
-      },
-      {
-        name: "Health & Wellness Areas",
-        status: "pass" as const,
-        description: "Bedroom placement ensures restorative sleep",
-      },
-      {
-        name: "Slope & Drainage",
-        status: "pass" as const,
-        description: "Natural slope towards Northeast for positive energy flow",
-      },
-      {
-        name: "Entrance Threshold",
-        status: "pass" as const,
-        description: "Main door threshold elevated for protection",
-      },
-      {
-        name: "Center (Brahmasthan)",
-        status: "pass" as const,
-        description: "Central area kept open and light for energy circulation",
-      },
-      {
-        name: "Furniture Placement",
-        status: "pass" as const,
-        description: "Heavy furniture in South and West for grounding",
-      },
-      {
-        name: "Electrical Main Board",
-        status: "pass" as const,
-        description: "Main electrical panel in Southeast (fire zone)",
-      },
-      {
-        name: "Basement Vastu",
-        status: inputs.floors.includes("+") ? ("pass" as const) : ("pass" as const),
-        description: "If basement exists, located in North or East portion",
-      },
-      {
-        name: "Terrace/Roof Access",
-        status: "pass" as const,
-        description: "Roof access from South or West side",
-      },
-    ]
-
-    return features
-  }
-
-  const detectDoshas = () => {
-    const doshas = []
-
-    if (!["north", "east", "northeast"].includes(inputs.facing)) {
-      doshas.push({
-        name: "Entrance Direction Dosha",
-        severity: "medium" as const,
-        remedy: "Place Vastu pyramids near entrance, use bright lighting, and install Ganesha symbol",
-      })
-    }
-
-    if (inputs.neighborHeight === "high") {
-      doshas.push({
-        name: "Shadow Dosha",
-        severity: "low" as const,
-        remedy: "Use mirrors and reflective surfaces to bring light, paint walls in light colors",
-      })
-    }
-
-    if (inputs.openSpaces === "none") {
-      doshas.push({
-        name: "Constricted Space Dosha",
-        severity: "high" as const,
-        remedy: "Keep interiors light and airy, use glass partitions, avoid clutter",
-      })
-    }
-
-    if (inputs.roadPosition === "one-side") {
-      doshas.push({
-        name: "Single Road Access",
-        severity: "low" as const,
-        remedy: "Ensure the road side is North or East for better energy flow",
-      })
-    }
-
-    // If no major doshas found
-    if (doshas.length === 0) {
-      doshas.push({
-        name: "No Major Doshas Detected",
-        severity: "low" as const,
-        remedy: "Maintain cleanliness and regular space clearing rituals",
-      })
-    }
-
-    return doshas
-  }
-
-  const getColorRecommendations = () => {
-    return [
-      { room: "Living Room", colors: ["White", "Light Yellow", "Light Green", "Cream"] },
-      { room: "Master Bedroom", colors: ["Light Pink", "Light Blue", "Lavender", "Beige"] },
-      { room: "Children's Room", colors: ["Light Green", "Sky Blue", "Peach", "Light Yellow"] },
-      { room: "Kitchen", colors: ["Red", "Orange", "Pink", "Yellow"] },
-      { room: "Pooja Room", colors: ["White", "Light Yellow", "Light Blue"] },
-      { room: "Study Room", colors: ["Green", "Light Blue", "White", "Cream"] },
-      { room: "Bathroom", colors: ["White", "Light Blue", "Light Pink"] },
-      { room: "Dining Area", colors: ["Light Green", "Light Orange", "Yellow"] },
-    ]
-  }
-
-  const generateLayout = () => {
+  const generateGeminiLayout = async (isAutoOptimize = false) => {
     if (!inputs.plotLength || !inputs.plotWidth) {
       toast({
-        title: "Incomplete Information",
-        description: "Please complete all required fields",
+        title: "Incomplete Dimensions",
+        description: "Please enter plot length and width.",
         variant: "destructive",
       })
       return
     }
 
-    const rooms = vastuRuleEngine()
-    const features = analyzeAdvancedFeatures()
-    const doshas = detectDoshas()
-    const colorRecommendations = getColorRecommendations()
+    if (isAutoOptimize) {
+      setIsOptimizing(true)
+    } else {
+      setIsGenerating(true)
+    }
 
-    // Use ML Engine to calculate overall score based on inferred confidence
-    const mlResults = rooms.map(r => ({
-      status: r.status,
-      confidence: r.status === "compliant" ? 0.95 : r.status === "warning" ? 0.5 : 0.1
-    }))
-    
-    const score = predictOverallScore(mlResults)
-    const category = score >= 90 ? "Excellent" : score >= 75 ? "Good" : score >= 60 ? "Average" : "Needs Correction"
-
-    const layoutMap = `${inputs.constructionType.toUpperCase()} - ${inputs.plotLength}ft x ${inputs.plotWidth}ft (${inputs.plotArea} sq.ft) - ${inputs.facing.toUpperCase()} Facing`
-
-    setLayout({
-      score,
-      category,
-      rooms,
-      features,
-      doshas,
-      colorRecommendations,
-      layoutMap,
+    const toastId = toast({
+      title: isAutoOptimize ? "Auto-Optimizing Vastu..." : "Generating Vedic Vastu Blueprint...",
+      description: "Consulting Gemini AI Vastu Engine with plot parameters.",
     })
 
+    try {
+      const res = await fetch("/api/analyze-vastu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          constructionType: inputs.constructionType,
+          floors: inputs.floors,
+          plotDimensions: {
+            length: inputs.plotLength,
+            width: inputs.plotWidth,
+            area: inputs.plotArea,
+          },
+          facing: inputs.facing.charAt(0).toUpperCase() + inputs.facing.slice(1),
+          openSpaces: inputs.openSpaces,
+          action: isAutoOptimize ? "optimize" : "analyze",
+        }),
+      })
 
-    toast({
-      title: "Layout Generated Successfully",
-      description: `Vastu Compliance Score: ${score}% (${category})`,
-    })
+      if (!res.ok) throw new Error("Vastu AI synthesis service returned an error")
+
+      const json = await res.json()
+      if (json.success && json.data) {
+        setAiData(json.data)
+        toast({
+          title: isAutoOptimize ? "✨ Vastu Optimization Complete" : "✨ Vastu Blueprint Generated",
+          description: `Vastu Compliance Score: ${json.data.overallScore}% (${json.data.vastuCategory})`,
+        })
+      }
+    } catch (err: any) {
+      console.error("Vastu generation error:", err)
+      toast({
+        title: "Generation Error",
+        description: err.message || "Failed to generate Vastu blueprint",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGenerating(false)
+      setIsOptimizing(false)
+    }
   }
 
   const downloadPDF = async () => {
-    if (!layout) return
-
+    if (!aiData) return
     try {
       const date = new Date().toLocaleDateString()
-
-      // Build room content
-      const roomContent = layout.rooms.map(room =>
-        `${room.direction.toUpperCase()} - ${room.name} (${room.status.toUpperCase()}): ${room.suggestion}`
+      const roomContent = aiData.roomAudits.map(
+        (r) => `${r.zone.toUpperCase()} — ${r.room} (Score: ${r.score}%): ${r.scientificReason} ${r.remedy ? `[Remedy: ${r.remedy}]` : ""}`
       )
 
-      // Build features content
-      const featuresContent = layout.features.map(f => `• ${f.name}: ${f.description}`)
-
       const pdf = await generateProfessionalDocument({
-        title: "Vastu-Compliant Layout Report",
-        subtitle: `Vastu Compliance Score: ${layout.score}% (${layout.category})`,
+        title: "Vedic Vastu & Architectural Blueprint Audit",
+        subtitle: `Vastu Compliance Score: ${aiData.overallScore}% — ${aiData.vastuCategory}`,
         sections: [
           {
-            heading: "Project Details",
+            heading: "Plot Specifications",
             content: [
-              `Construction Type: ${inputs.constructionType.toUpperCase()}`,
-              `Floors: ${inputs.floors}`,
-              `Plot Dimensions: ${inputs.plotLength}ft x ${inputs.plotWidth}ft (${inputs.plotArea} sq.ft)`,
-              `Facing Direction: ${inputs.facing.toUpperCase()}`,
-              `Road Position: ${inputs.roadPosition}`,
+              `Structure: ${inputs.constructionType.toUpperCase()} (${inputs.floors})`,
+              `Dimensions: ${inputs.plotLength}ft × ${inputs.plotWidth}ft (${inputs.plotArea} sq.ft)`,
+              `Entrance Facing: ${inputs.facing.toUpperCase()}`,
+              `Surrounding Open Spaces: ${inputs.openSpaces}`,
               `Generated Date: ${date}`,
-            ]
+            ],
           },
           {
-            heading: "Executive Summary",
+            heading: "Executive Spatial Appraisal",
             content: [
-              "The following report provides a comprehensive Vastu analysis for your property based on high-end industrial engineering principles.",
-              `Overall Vastu Compliance Score: ${layout.score}%`,
-              `Property Rating: ${layout.category}`,
-              "Detailed analysis and layout recommendations follow on the subsequent pages."
-            ]
-          }
+              aiData.executiveSummary,
+              `Panch Tattva Water (NE): ${aiData.elementalBalance.waterNE.score}% (${aiData.elementalBalance.waterNE.status})`,
+              `Panch Tattva Fire (SE): ${aiData.elementalBalance.fireSE.score}% (${aiData.elementalBalance.fireSE.status})`,
+              `Panch Tattva Earth (SW): ${aiData.elementalBalance.earthSW.score}% (${aiData.elementalBalance.earthSW.status})`,
+              `Panch Tattva Air (NW): ${aiData.elementalBalance.airNW.score}% (${aiData.elementalBalance.airNW.status})`,
+              `Panch Tattva Space (Center): ${aiData.elementalBalance.spaceCenter.score}% (${aiData.elementalBalance.spaceCenter.status})`,
+            ],
+          },
+          {
+            heading: "Room-by-Room Directional Audits",
+            content: roomContent,
+          },
         ],
-        footerText: `Vastu Analysis Report | Compliance Score: ${layout.score}%`,
+        footerText: `SIID Certified Vastu Purusha Mandala Audit | Compliance Score: ${aiData.overallScore}%`,
       })
 
-      // Detailed Room Analysis Page
-      pdf.addPage()
-      let yPos = 25
-
-      pdf.setTextColor(34, 197, 94)
-      pdf.setFontSize(14)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("DETAILED ROOM ORIENTATION ANALYSIS", 20, yPos)
-      pdf.line(20, yPos + 2, 190, yPos + 2)
-      yPos += 12
-
-      layout.rooms.forEach((room) => {
-        if (yPos > 250) {
-          pdf.addPage()
-          yPos = 25
-        }
-
-        // Status indicator
-        if (room.status === "compliant") {
-          pdf.setFillColor(34, 197, 94)
-        } else if (room.status === "warning") {
-          pdf.setFillColor(251, 191, 36)
-        } else {
-          pdf.setFillColor(239, 68, 68)
-        }
-        pdf.circle(18, yPos - 1, 2, "F")
-
-        pdf.setTextColor(0, 0, 0)
-        pdf.setFont("helvetica", "bold")
-        pdf.setFontSize(10)
-        pdf.text(`${room.name}`, 23, yPos)
-        
-        pdf.setFont("helvetica", "normal")
-        pdf.setTextColor(100, 100, 100)
-        pdf.text(`- ${room.direction}`, 70, yPos)
-        
-        pdf.setTextColor(0, 0, 0)
-        pdf.setFontSize(8)
-        pdf.text(`[${room.priority.toUpperCase()}]`, 160, yPos, { align: "right" })
-
-        yPos += 6
-        pdf.setTextColor(80, 80, 80)
-        pdf.setFontSize(9)
-        const suggestionLines = pdf.splitTextToSize(room.suggestion, 165)
-        pdf.text(suggestionLines, 23, yPos)
-        yPos += suggestionLines.length * 4.5
-
-        if (room.remedy) {
-          pdf.setTextColor(150, 50, 50)
-          pdf.setFont("helvetica", "bold")
-          const remedyLines = pdf.splitTextToSize(`Remedy: ${room.remedy}`, 165)
-          pdf.text(remedyLines, 23, yPos)
-          yPos += remedyLines.length * 4.5
-          pdf.setFont("helvetica", "normal")
-        }
-
-        yPos += 4
-      })
-
-      // Advanced Features Analysis Page
-      pdf.addPage()
-      yPos = 25
-
-      pdf.setTextColor(59, 130, 246)
-      pdf.setFontSize(14)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("ADVANCED FEATURES ANALYSIS (25+)", 20, yPos)
-      pdf.line(20, yPos + 2, 190, yPos + 2)
-      yPos += 12
-
-      pdf.setFontSize(9)
-      layout.features.forEach((feature, index) => {
-        if (yPos > 270) {
-          pdf.addPage()
-          yPos = 25
-        }
-
-        // Status indicator
-        if (feature.status === "pass") {
-          pdf.setFillColor(34, 197, 94)
-        } else if (feature.status === "warning") {
-          pdf.setFillColor(251, 191, 36)
-        } else {
-          pdf.setFillColor(239, 68, 68)
-        }
-        pdf.circle(18, yPos - 1, 1.5, "F")
-
-        pdf.setTextColor(0, 0, 0)
-        pdf.setFont("helvetica", "bold")
-        pdf.text(`${index + 1}. ${feature.name}`, 23, yPos)
-        
-        pdf.setFont("helvetica", "normal")
-        yPos += 5
-        pdf.setTextColor(80, 80, 80)
-        const descLines = pdf.splitTextToSize(feature.description, 165)
-        pdf.text(descLines, 23, yPos)
-        yPos += descLines.length * 4 + 2
-      })
-
-      // Doshas & Remedies Page
-      pdf.addPage()
-      yPos = 25
-
-      pdf.setTextColor(239, 68, 68)
-      pdf.setFontSize(14)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("VASTU DOSHA DETECTION & REMEDIES", 20, yPos)
-      pdf.line(20, yPos + 2, 190, yPos + 2)
-      yPos += 12
-
-      pdf.setFontSize(10)
-      layout.doshas.forEach((dosha) => {
-        if (yPos > 260) {
-          pdf.addPage()
-          yPos = 25
-        }
-
-        if (dosha.severity === "high") {
-          pdf.setFillColor(239, 68, 68)
-        } else if (dosha.severity === "medium") {
-          pdf.setFillColor(251, 191, 36)
-        } else {
-          pdf.setFillColor(34, 197, 94)
-        }
-        
-        pdf.rect(20, yPos - 4, 35, 6, "F")
-        pdf.setTextColor(255, 255, 255)
-        pdf.setFont("helvetica", "bold")
-        pdf.text(dosha.severity.toUpperCase(), 37.5, yPos, { align: "center" })
-
-        pdf.setTextColor(0, 0, 0)
-        pdf.setFont("helvetica", "bold")
-        pdf.text(dosha.name, 60, yPos)
-
-        yPos += 7
-        pdf.setFont("helvetica", "normal")
-        pdf.setTextColor(80, 80, 80)
-        pdf.setFontSize(9)
-        const remedyLines = pdf.splitTextToSize(`Remedy Action: ${dosha.remedy}`, 160)
-        pdf.text(remedyLines, 23, yPos)
-        yPos += remedyLines.length * 4.5 + 5
-      })
-
-      // Color Recommendations
-      yPos += 10
-      if (yPos > 200) {
-        pdf.addPage()
-        yPos = 25
-      }
-
-      pdf.setTextColor(59, 130, 246)
-      pdf.setFontSize(14)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("PREMIUM COLOR RECOMMENDATIONS", 20, yPos)
-      pdf.line(20, yPos + 2, 190, yPos + 2)
-      yPos += 12
-
-      pdf.setFontSize(10)
-      pdf.setTextColor(0, 0, 0)
-      layout.colorRecommendations.forEach((rec) => {
-        if (yPos > 275) {
-          pdf.addPage()
-          yPos = 25
-        }
-
-        pdf.setFont("helvetica", "bold")
-        pdf.text(`${rec.room}:`, 23, yPos)
-        pdf.setFont("helvetica", "normal")
-        pdf.setTextColor(70, 70, 70)
-        pdf.text(rec.colors.join(", "), 75, yPos)
-        yPos += 8
-      })
-
-      // Final Branding & Save
-      const pageCount = pdf.getNumberOfPages()
-      pdf.setFontSize(8)
-      pdf.setTextColor(128, 128, 128)
-      for (let i = 1; i <= pageCount; i++) {
-        pdf.setPage(i)
-        pdf.text(`Generated by SIID VLG System | Professional Report | Page ${i} of ${pageCount}`, 105, 285, { align: "center" })
-        pdf.text(`Report Validity: 12 Months | Reference ID: VLG-${Date.now().toString().slice(-6)}`, 105, 290, { align: "center" })
-      }
-
-      pdf.save(`SIID-Vastu-Layout-${inputs.constructionType}-${date.replace(/\//g, "-")}.pdf`)
-
+      pdf.save(`SIID-Vastu-Audit-${inputs.constructionType}-${date.replace(/\//g, "-")}.pdf`)
       toast({
-        title: "Professional PDF Generated",
-        description: "Your comprehensive Vastu analysis report has been saved.",
+        title: "Report Downloaded",
+        description: "Official Vastu audit PDF has been saved.",
       })
-    } catch (error) {
-      console.error("PDF Generation Error:", error)
+    } catch (e) {
       toast({
-        title: "Generation Failed",
-        description: "Error constructing your professional report. Please try again.",
+        title: "Download Failed",
+        description: "Could not compile PDF.",
         variant: "destructive",
       })
     }
   }
 
-const downloadImage = () => {
-  toast({
-    title: "Image Generation",
-    description: "High-resolution layout image is being generated...",
-  })
-
-  // Create canvas for layout visualization
-  const canvas = document.createElement("canvas")
-  canvas.width = 1200
-  canvas.height = 1600
-  const ctx = canvas.getContext("2d")
-
-  if (!ctx || !layout) return
-
-  // Background
-  ctx.fillStyle = "#ffffff"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-  // Header
-  ctx.fillStyle = "#3b82f6"
-  ctx.fillRect(0, 0, canvas.width, 100)
-  ctx.fillStyle = "#ffffff"
-  ctx.font = "bold 36px Arial"
-  ctx.textAlign = "center"
-  ctx.fillText("VASTU LAYOUT", canvas.width / 2, 50)
-  ctx.font = "20px Arial"
-  ctx.fillText(layout.layoutMap, canvas.width / 2, 80)
-
-  // Score badge
-  ctx.fillStyle = layout.score >= 75 ? "#22c55e" : "#eab308"
-  ctx.fillRect(50, 120, 200, 80)
-  ctx.fillStyle = "#ffffff"
-  ctx.font = "bold 48px Arial"
-  ctx.fillText(`${layout.score}%`, 150, 170)
-
-  // Dynamic room layout grid generator
-  const getRoomLabel = (r: number, c: number) => {
-    const dataset = VASTU_DATASET[inputs.constructionType] || VASTU_DATASET.house
-    const cell = dataset[r][c]
-    return { title: cell.title, color: cell.color }
-  }
-
-
-  const availableWidth = 800
-  const availableHeight = 1000
-
-  // Scale layout using plot dimensions (Width/Length)
-  const plotRatio = (inputs.plotWidth || 30) / (inputs.plotLength || 40)
-  let canvasPlotW = availableWidth
-  let canvasPlotH = availableWidth / plotRatio
-
-  if (canvasPlotH > availableHeight) {
-    canvasPlotH = availableHeight
-    canvasPlotW = availableHeight * plotRatio
-  }
-
-  const startX = (canvas.width - canvasPlotW) / 2
-  const startY = 250
-
-  const cellWidth = canvasPlotW / 3
-  const cellHeight = canvasPlotH / 3
-
-  // Draw compass directions
-  ctx.fillStyle = "#000000"
-  ctx.font = "bold 20px Arial"
-  ctx.fillText("NORTH", startX + canvasPlotW / 2, startY - 20)
-  ctx.fillText("SOUTH", startX + canvasPlotW / 2, startY + canvasPlotH + 30)
-  ctx.fillText("EAST", startX + canvasPlotW + 35, startY + canvasPlotH / 2)
-  ctx.fillText("WEST", startX - 45, startY + canvasPlotH / 2)
-
-  // Draw dynamic Vastu grid
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 3; col++) {
-      const room = getRoomLabel(row, col)
-
-      const x = startX + col * cellWidth
-      const y = startY + row * cellHeight
-
-      // Fill Room Background (simulating opacity using hex)
-      ctx.fillStyle = room.color + "1A" // ~10% opacity
-      ctx.fillRect(x, y, cellWidth, cellHeight)
-
-      // Stroke Grid
-      ctx.strokeStyle = "#475569"
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, cellWidth, cellHeight)
-
-      // Draw Text
-      ctx.fillStyle = room.color
-      ctx.font = "bold 16px Arial"
-      ctx.fillText(room.title, x + (cellWidth / 2), y + (cellHeight / 2))
-
-      // Add Entrance Marker based on facing direction
-      if (
-        (inputs.facing === "north" && row === 0 && col === 1) ||
-        (inputs.facing === "east" && row === 1 && col === 2) ||
-        (inputs.facing === "south" && row === 2 && col === 1) ||
-        (inputs.facing === "west" && row === 1 && col === 0) ||
-        (inputs.facing === "northeast" && row === 0 && col === 2) ||
-        (inputs.facing === "northwest" && row === 0 && col === 0) ||
-        (inputs.facing === "southeast" && row === 2 && col === 2) ||
-        (inputs.facing === "southwest" && row === 2 && col === 0)
-      ) {
-        ctx.fillStyle = "#000000"
-        ctx.font = "bold 14px Arial"
-        ctx.fillText("🚪 ENTRANCE", x + (cellWidth / 2), y + (cellHeight / 2) + 25)
-      }
-    }
-  }
-
-  console.log("Generated Dynamic Layout Grid bounds:", { canvasPlotW, canvasPlotH, cellWidth, cellHeight })
-
-  // Convert to image and download
-  canvas.toBlob((blob) => {
-    if (blob) {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `Vastu-Layout-${inputs.constructionType}-${new Date().toLocaleDateString()}.png`
-      a.click()
-      URL.revokeObjectURL(url)
-
-      toast({
-        title: "Image Downloaded",
-        description: "Layout visualization has been saved",
-      })
-    }
-  })
-}
-
-const nextStep = () => setStep(Math.min(step + 1, 3))
-const prevStep = () => setStep(Math.max(step - 1, 1))
-
-return (
-  <Card className="p-4 sm:p-6 md:p-8 bg-background border-border shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden relative">
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 md:mb-8 gap-4">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-          <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold tracking-tight">Vastu Layout Generator</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="secondary" className="text-[9px] font-black tracking-widest uppercase">
-              Step {step <= 3 ? step : "Results"} of 3
-            </Badge>
-            <div className="flex gap-1">
-              {[1, 2, 3].map((s) => (
-                <div key={s} className={cn("h-1 rounded-full transition-all", s === step ? "w-4 bg-primary" : "w-1 bg-muted")} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Step 1: Construction Details */}
-    {step === 1 && (
-      <div className="space-y-4">
-        <h4 className="font-semibold text-base mb-3">A. Construction Details</h4>
-
-        <div>
-          <Label>Type of Construction *</Label>
-          <Select
-            value={inputs.constructionType}
-            onValueChange={(v) => setInputs({ ...inputs, constructionType: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="house">Individual House</SelectItem>
-              <SelectItem value="apartment">Apartment</SelectItem>
-              <SelectItem value="commercial">Commercial Building</SelectItem>
-              <SelectItem value="villa">Villa</SelectItem>
-              <SelectItem value="hospital">Hospital/Medical Center</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Number of Floors *</Label>
-          <Select value={inputs.floors} onValueChange={(v) => setInputs({ ...inputs, floors: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="G">Ground Floor (G)</SelectItem>
-              <SelectItem value="G+1">G+1</SelectItem>
-              <SelectItem value="G+2">G+2</SelectItem>
-              <SelectItem value="G+3">G+3</SelectItem>
-              <SelectItem value="G+4">G+4</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Built-up Area Preference</Label>
-          <Input
-            placeholder="e.g., 1500 sq.ft"
-            value={inputs.builtUpArea}
-            onChange={(e) => setInputs({ ...inputs, builtUpArea: e.target.value })}
-          />
-        </div>
-
-        <Button onClick={nextStep} className="w-full">
-          Next: Land Details
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
-    )}
-
-    {/* Step 2: Land Details */}
-    {step === 2 && (
-      <div className="space-y-4">
-        <h4 className="font-semibold text-base mb-3">B. Land Details</h4>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Plot Length (ft) *</Label>
-            <Input
-              type="number"
-              value={inputs.plotLength}
-              onChange={(e) => updateDimensions("plotLength", Number(e.target.value))}
-              min={10}
-              max={500}
-            />
+  return (
+    <Card className="p-4 sm:p-6 md:p-8 border-border shadow-2xl rounded-2xl bg-card space-y-6">
+      
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+            <Compass className="w-5 h-5" />
           </div>
           <div>
-            <Label>Plot Width (ft) *</Label>
-            <Input
-              type="number"
-              value={inputs.plotWidth}
-              onChange={(e) => updateDimensions("plotWidth", Number(e.target.value))}
-              min={10}
-              max={500}
-            />
+            <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              Vedic Vastu AI Layout & Blueprint Synthesizer
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Harmonizes plot dimensions with Vastu Purusha Mandala & solar trajectories
+            </p>
           </div>
         </div>
 
-        <div>
-          <Label>Plot Area (Auto-calculated)</Label>
-          <Input value={`${inputs.plotArea} sq.ft`} disabled className="bg-muted" />
-        </div>
-
-        <div>
-          <Label>Facing Direction *</Label>
-          <Select value={inputs.facing} onValueChange={(v) => setInputs({ ...inputs, facing: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="north">North</SelectItem>
-              <SelectItem value="northeast">Northeast</SelectItem>
-              <SelectItem value="east">East</SelectItem>
-              <SelectItem value="southeast">Southeast</SelectItem>
-              <SelectItem value="south">South</SelectItem>
-              <SelectItem value="southwest">Southwest</SelectItem>
-              <SelectItem value="west">West</SelectItem>
-              <SelectItem value="northwest">Northwest</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Road Position</Label>
-          <Select value={inputs.roadPosition} onValueChange={(v) => setInputs({ ...inputs, roadPosition: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="one-side">One-side Road</SelectItem>
-              <SelectItem value="two-side">Two-side Road</SelectItem>
-              <SelectItem value="corner">Corner Plot</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={prevStep} variant="outline" className="flex-1 bg-transparent">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-          <Button onClick={nextStep} className="flex-1">
-            Next: Environment
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+        <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs font-semibold">
+          Gemini 2.5 Intelligence
+        </Badge>
       </div>
-    )}
 
-    {/* Step 3: Environmental Inputs */}
-    {step === 3 && (
-      <div className="space-y-4">
-        <h4 className="font-semibold text-base mb-3">C. Environmental Inputs</h4>
+      {/* 3-STEP CONFIGURATION INPUTS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+        
+        {/* Col 1: Structure */}
+        <div className="space-y-3">
+          <Label className="text-xs font-bold uppercase text-muted-foreground">1. Building Structure</Label>
+          <div className="space-y-2">
+            <Select value={inputs.constructionType} onValueChange={(v) => setInputs({ ...inputs, constructionType: v })}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Structure Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="villa">Independent Villa</SelectItem>
+                <SelectItem value="house">Individual House</SelectItem>
+                <SelectItem value="duplex">Modern Duplex</SelectItem>
+                <SelectItem value="apartment">Residential Apartment</SelectItem>
+                <SelectItem value="office">Commercial Office</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <div>
-          <Label>Surrounding Open Spaces</Label>
-          <Select value={inputs.openSpaces} onValueChange={(v) => setInputs({ ...inputs, openSpaces: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="plenty">Plenty of Open Space</SelectItem>
-              <SelectItem value="moderate">Moderate Space</SelectItem>
-              <SelectItem value="limited">Limited Space</SelectItem>
-              <SelectItem value="none">No Open Space</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={inputs.floors} onValueChange={(v) => setInputs({ ...inputs, floors: v })}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Floors" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="G">Ground Floor (G)</SelectItem>
+                <SelectItem value="G+1">G + 1 Floor</SelectItem>
+                <SelectItem value="G+2">G + 2 Floors</SelectItem>
+                <SelectItem value="G+3">G + 3 Floors</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div>
-          <Label>Neighbor Building Height</Label>
-          <Select value={inputs.neighborHeight} onValueChange={(v) => setInputs({ ...inputs, neighborHeight: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ground">Ground Level</SelectItem>
-              <SelectItem value="low">Low (1-2 floors)</SelectItem>
-              <SelectItem value="medium">Medium (3-4 floors)</SelectItem>
-              <SelectItem value="high">High (5+ floors)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Climatic Zone (Optional)</Label>
-          <Select value={inputs.climaticZone} onValueChange={(v) => setInputs({ ...inputs, climaticZone: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hot-dry">Hot & Dry</SelectItem>
-              <SelectItem value="hot-humid">Hot & Humid</SelectItem>
-              <SelectItem value="moderate">Moderate</SelectItem>
-              <SelectItem value="cold">Cold</SelectItem>
-              <SelectItem value="coastal">Coastal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={prevStep} variant="outline" className="flex-1 bg-transparent">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-          <Button onClick={generateLayout} className="flex-1 bg-primary">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Generate Layout
-          </Button>
-        </div>
-      </div>
-    )}
-
-    {/* Layout Results */}
-    {layout && (
-      <div className="mt-6 pt-6 border-t space-y-4">
-        {/* Score Display */}
-        <div
-          className={`p-6 rounded-lg border-2 ${layout.score >= 90
-            ? "bg-green-50 dark:bg-green-900/20 border-green-500"
-            : layout.score >= 75
-              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500"
-              : layout.score >= 60
-                ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500"
-                : "bg-red-50 dark:bg-red-900/20 border-red-500"
-            }`}
-        >
-          <div className="flex items-center justify-between">
+        {/* Col 2: Dimensions */}
+        <div className="space-y-3">
+          <Label className="text-xs font-bold uppercase text-muted-foreground">2. Plot Geometry</Label>
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <div className="text-sm font-medium mb-1">Vastu Compliance Score</div>
-              <div className="text-4xl font-bold">{layout.score}%</div>
-              <Badge className="mt-2" variant={layout.score >= 75 ? "default" : "secondary"}>
-                {layout.category}
-              </Badge>
+              <span className="text-[10px] text-muted-foreground">Length (ft)</span>
+              <Input
+                type="number"
+                value={inputs.plotLength}
+                onChange={(e) => updateDimensions("plotLength", Number(e.target.value))}
+                className="h-9 text-xs"
+              />
             </div>
-            <CheckCircle2 className="w-16 h-16 text-green-500" />
+            <div>
+              <span className="text-[10px] text-muted-foreground">Width (ft)</span>
+              <Input
+                type="number"
+                value={inputs.plotWidth}
+                onChange={(e) => updateDimensions("plotWidth", Number(e.target.value))}
+                className="h-9 text-xs"
+              />
+            </div>
+          </div>
+          <div className="text-[11px] font-semibold text-muted-foreground">
+            Total Plot: <span className="text-foreground">{inputs.plotArea} sq.ft</span>
           </div>
         </div>
 
-        {/* Analysis Tabs */}
-        <div className="w-full">
-           <div className="flex border-b border-border mb-4 overflow-x-auto no-scrollbar">
-              <button 
-                onClick={() => setStep(4)} 
-                className={cn("px-4 py-2 text-sm font-bold uppercase tracking-widest whitespace-nowrap transition-all border-b-2", step === 4 ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
-              >
-                Room Analysis
-              </button>
-              <button 
-                onClick={() => setStep(5)} 
-                className={cn("px-4 py-2 text-sm font-bold uppercase tracking-widest whitespace-nowrap transition-all border-b-2", step === 5 ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
-              >
-                Advanced Features
-              </button>
-              <button 
-                onClick={() => setStep(6)} 
-                className={cn("px-4 py-2 text-sm font-bold uppercase tracking-widest whitespace-nowrap transition-all border-b-2", step === 6 ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
-              >
-                Vastu Doshas
-              </button>
-           </div>
+        {/* Col 3: Orientation */}
+        <div className="space-y-3">
+          <Label className="text-xs font-bold uppercase text-muted-foreground">3. Entrance Facing</Label>
+          <Select value={inputs.facing} onValueChange={(v) => setInputs({ ...inputs, facing: v })}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Facing Direction" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="north">North (Prosperity / Kubera)</SelectItem>
+              <SelectItem value="northeast">North-East (Ishanya / Spiritual)</SelectItem>
+              <SelectItem value="east">East (Health / Surya)</SelectItem>
+              <SelectItem value="southeast">South-East (Agni)</SelectItem>
+              <SelectItem value="south">South (Yama)</SelectItem>
+              <SelectItem value="southwest">South-West (Prithvi / Stability)</SelectItem>
+              <SelectItem value="west">West (Varuna)</SelectItem>
+              <SelectItem value="northwest">North-West (Vayu)</SelectItem>
+            </SelectContent>
+          </Select>
 
-           <div className="mt-4">
-              {/* Room Analysis Tab */}
-              {(step === 4 || !step) && (
-                <div className="space-y-3">
-                  <h4 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-                    <Compass className="w-4 h-4" /> Room Placement Analysis
-                  </h4>
-                  <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {layout.rooms.map((room, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "p-4 rounded-2xl border transition-all hover:shadow-md",
-                          room.status === "compliant" ? "bg-green-50/50 border-green-100" : 
-                          room.status === "warning" ? "bg-amber-50/50 border-amber-100" : 
-                          "bg-red-50/50 border-red-100"
-                        )}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {room.status === "compliant" ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
-                            <span className="font-bold text-sm uppercase">{room.name}</span>
-                          </div>
-                          <Badge variant="outline" className="text-[10px] font-black">{room.direction}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{room.suggestion}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Advanced Features Tab */}
-              {step === 5 && (
-                <div className="space-y-4">
-                   <h4 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Advanced Engineering Features
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {layout.features.map((feature, index) => (
-                      <div key={index} className="p-3 rounded-xl border bg-muted/20 flex items-start gap-3">
-                        <div className={cn("mt-1 p-1 rounded-full", feature.status === "pass" ? "bg-green-500/20" : "bg-amber-500/20")}>
-                          <CheckCircle2 className={cn("w-3 h-3", feature.status === "pass" ? "text-green-600" : "text-amber-600")} />
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-foreground">{feature.name}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{feature.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Doshas Tab */}
-              {step === 6 && (
-                <div className="space-y-4">
-                   <h4 className="font-bold text-xs uppercase tracking-widest text-red-500 mb-3 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" /> Vastu Doshas & Remedies
-                  </h4>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {layout.doshas.map((dosha, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "p-4 rounded-2xl border bg-background shadow-sm",
-                          dosha.severity === "high" ? "border-red-200" : "border-amber-200"
-                        )}
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="font-bold text-sm uppercase text-foreground">{dosha.name}</span>
-                          <Badge variant={dosha.severity === "high" ? "destructive" : "secondary"} className="text-[9px] font-black">
-                            {dosha.severity.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <div className="p-3 rounded-xl bg-muted/30 border border-dashed border-border">
-                          <p className="text-xs font-medium text-foreground"><span className="text-primary font-bold uppercase text-[9px] mr-2">Remedy:</span> {dosha.remedy}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-           </div>
-        </div>
-
-        {/* Download Buttons */}
-        <div className="flex flex-wrap gap-2 pt-6 border-t border-border">
-          <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-widest bg-transparent hover:bg-muted transition-all" onClick={downloadPDF}>
-            <Download className="w-4 h-4 mr-2" />
-            Download PDF
-          </Button>
-          <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-widest bg-transparent hover:bg-muted transition-all" onClick={downloadImage}>
-            <FileImage className="w-4 h-4 mr-2" />
-            Download Image
-          </Button>
-          <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-widest bg-transparent hover:bg-muted transition-all" onClick={() => { setLayout(null); setStep(1); }}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reset
+          <Button
+            onClick={() => generateGeminiLayout(false)}
+            disabled={isGenerating || isOptimizing}
+            className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Synthesizing...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5" />
+                <span>Generate Vastu Blueprint</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
-    )}
-  </Card>
-)
+
+      {/* SYNTHESIZED RESULTS & BLUEPRINT VIEWER */}
+      {aiData && (
+        <div className="space-y-6 pt-2 animate-in fade-in zoom-in-95 duration-300">
+          
+          {/* Top Score Banner */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-yellow-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase text-amber-700 dark:text-amber-300 tracking-wider">
+                  Vastu Purusha Mandala Audit
+                </span>
+                <Badge className="bg-emerald-500 text-white text-[10px]">
+                  {aiData.vastuCategory}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
+                {aiData.executiveSummary}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase">Harmonic Score</span>
+                <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
+                  {aiData.overallScore}%
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => generateGeminiLayout(true)}
+                disabled={isOptimizing}
+                className="gap-1.5 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+              >
+                {isOptimizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                Auto-Optimize
+              </Button>
+
+              <Button size="sm" onClick={downloadPDF} className="gap-1.5 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md">
+                <Download className="w-3.5 h-3.5" /> Export PDF
+              </Button>
+            </div>
+          </div>
+
+          {/* 2-COLUMN DISPLAY: BLUEPRINT CANVAS (Left) + AUDITS & REMEDIES (Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* LEFT: 2D VECTOR CAD BLUEPRINT CANVAS (7 cols) */}
+            <div className="lg:col-span-7 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-amber-500" />
+                  Vector CAD Blueprint Layout ({inputs.plotLength}' × {inputs.plotWidth}')
+                </h4>
+                <span className="text-[10px] font-semibold text-muted-foreground">Scale 1:50 Vector Floorplan</span>
+              </div>
+
+              {/* Interactive Vector CAD Blueprint Grid */}
+              <div className="relative w-full aspect-[4/3] rounded-2xl bg-slate-950 border-2 border-slate-800 p-4 shadow-2xl overflow-hidden flex items-center justify-center">
+                
+                {/* Blueprint Grid Lines Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:24px_24px] opacity-40 pointer-events-none" />
+
+                {/* Compass Compass Rose in North-East */}
+                <div className="absolute top-3 right-3 p-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-center shadow-lg pointer-events-none">
+                  <div className="w-8 h-8 rounded-full border border-amber-400 flex items-center justify-center mx-auto text-amber-400 font-black text-[11px]">
+                    N
+                  </div>
+                  <span className="text-[8px] font-bold text-slate-400 tracking-widest block mt-0.5">COMPASS</span>
+                </div>
+
+                {/* Direction Labels on Canvas Perimeter */}
+                <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  NORTH (Kubera)
+                </span>
+                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  SOUTH (Yama)
+                </span>
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest [writing-mode:vertical-rl]">
+                  EAST (Surya)
+                </span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest [writing-mode:vertical-rl]">
+                  WEST (Varuna)
+                </span>
+
+                {/* Central Brahmasthan Marker */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-dashed border-amber-500/40 flex items-center justify-center pointer-events-none">
+                  <span className="text-[8px] font-bold text-amber-400/70 uppercase text-center leading-none">
+                    Brahma<br />sthan
+                  </span>
+                </div>
+
+                {/* Render Dynamic Blueprint Rooms */}
+                <div className="relative w-[85%] h-[80%] border-2 border-slate-600 bg-slate-900/60 rounded-xl overflow-hidden shadow-inner">
+                  {aiData.blueprintRooms.map((room) => (
+                    <motion.div
+                      key={room.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute rounded-lg border border-slate-700/80 p-2 flex flex-col justify-between shadow-md group hover:border-amber-400/80 hover:z-20 transition-all cursor-pointer"
+                      style={{
+                        top: `${room.y}%`,
+                        left: `${room.x}%`,
+                        width: `${room.w}%`,
+                        height: `${room.h}%`,
+                        backgroundColor: `${room.color}22`,
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="text-[10px] font-bold truncate" style={{ color: room.textColor }}>
+                          {room.name}
+                        </span>
+                        <span className="text-[8px] px-1 py-0.2 rounded bg-slate-950/80 text-slate-400 font-mono">
+                          {room.zone}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[8px] text-slate-400 font-medium">
+                        <span>🚪 Door Swing</span>
+                        <span className="text-emerald-400 font-semibold">Vastu OK</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT: 5-ZONE PANCH TATTVA & ROOM AUDITS (5 cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              
+              {/* 5-Zone Elemental Balance Breakdown */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2.5">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+                  Panch Tattva Elemental Zones
+                </span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                      <Droplets className="w-3.5 h-3.5 text-cyan-500" /> North-East (Jal / Water)
+                    </span>
+                    <span className="font-bold text-cyan-600 dark:text-cyan-400">
+                      {aiData.elementalBalance.waterNE.score}% • {aiData.elementalBalance.waterNE.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                      <Flame className="w-3.5 h-3.5 text-red-500" /> South-East (Agni / Fire)
+                    </span>
+                    <span className="font-bold text-red-600 dark:text-red-400">
+                      {aiData.elementalBalance.fireSE.score}% • {aiData.elementalBalance.fireSE.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                      <Mountain className="w-3.5 h-3.5 text-amber-600" /> South-West (Prithvi / Earth)
+                    </span>
+                    <span className="font-bold text-amber-600 dark:text-amber-400">
+                      {aiData.elementalBalance.earthSW.score}% • {aiData.elementalBalance.earthSW.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                      <Wind className="w-3.5 h-3.5 text-indigo-500" /> North-West (Vayu / Air)
+                    </span>
+                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                      {aiData.elementalBalance.airNW.score}% • {aiData.elementalBalance.airNW.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                      <Sun className="w-3.5 h-3.5 text-yellow-500" /> Center (Akash / Space)
+                    </span>
+                    <span className="font-bold text-yellow-600 dark:text-yellow-400">
+                      {aiData.elementalBalance.spaceCenter.score}% • {aiData.elementalBalance.spaceCenter.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Room Audits List */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+                  Directional Compliance Matrix
+                </span>
+
+                <div className="space-y-2 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
+                  {aiData.roomAudits.map((item, idx) => (
+                    <div key={idx} className="p-3 rounded-xl border border-border bg-card shadow-sm space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          {item.room} ({item.zone})
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                          {item.score}% Match
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        {item.scientificReason}
+                      </p>
+                      {item.remedy && (
+                        <div className="text-[10px] text-amber-700 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/20 p-1.5 rounded border border-amber-200 dark:border-amber-900/30">
+                          Remedy: {item.remedy}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
+  )
 }
