@@ -80,11 +80,7 @@ export default function Navbar() {
           <Link href="/contact" className={`text-xs md:text-sm font-medium transition-all hover:-translate-y-0.5 ${isScrolled ? 'text-muted-foreground hover:text-foreground' : 'text-white/90 hover:text-white drop-shadow-sm'}`}>
             Contact
           </Link>
-          <div className={`w-px h-4 mx-2 ${isScrolled ? 'bg-border' : 'bg-white/30'}`}></div>
-          <Link href="/3d-generator" className={`text-xs md:text-sm font-semibold hover:-translate-y-0.5 transition-all relative group ${isScrolled ? 'text-accent hover:text-accent-dark' : 'text-white hover:text-white drop-shadow-md'}`}>
-            3D Generator
-            <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all group-hover:w-full ${isScrolled ? 'bg-accent' : 'bg-white'}`}></span>
-          </Link>
+
         </nav>
 
         {/* Desktop Actions */}
@@ -195,13 +191,7 @@ export default function Navbar() {
             >
               Contact
             </Link>
-            <Link
-              href="/3d-generator"
-              className="block text-sm sm:text-base font-semibold text-accent hover:text-accent-dark hover:pl-2 transition-all py-2 sm:py-2.5"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              3D Generator
-            </Link>
+
           </nav>
 
           {/* Divider */}

@@ -9,8 +9,8 @@ const DEFAULT_MODEL = "openai/gpt-5-mini"
 const MODEL_OPTIONS = [
   { value: "openai/gpt-5-mini", label: "OpenAI GPT-5 Mini" },
   { value: "openai/gpt-5", label: "OpenAI GPT-5" },
-  { value: "google/gemini-1.5-pro", label: "Gemini 1.5 Pro" },
-  { value: "google/gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (Fastest)" },
+  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (Deep Reasoning)" },
   { value: "anthropic/claude-sonnet-4.5", label: "Claude Sonnet 4.5" },
   { value: "anthropic/claude-haiku", label: "Claude Haiku" },
   { value: "fireworks/llama-3.1-70b-instruct", label: "Llama 3.1 70B (FW)" },

@@ -34,25 +34,42 @@ export async function POST(req: Request) {
       )
     }
 
-    // Create providers
+    // Google Generative AI (Gemini) provider
+    const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
+    const google = createGoogleGenerativeAI({
+      apiKey: googleApiKey,
+    })
+
+    // OpenAI provider fallback
     const openai = createOpenAI({
       apiKey: process.env.OPENAI_API_KEY || "",
     })
 
-    const google = createGoogleGenerativeAI({
-      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "",
+    // OpenRouter fallback if configured
+    const openrouter = createOpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY || "",
+      baseURL: "https://openrouter.ai/api/v1",
     })
 
-    // Default to Gemini if OpenAI key is not configured
-    const defaultModel = process.env.OPENAI_API_KEY ? "openai/gpt-4o-mini" : "google/gemini-1.5-flash"
+    // Default model: Gemini 2.5 Flash (highest speed, excellent reasoning, supported on API key)
+    const defaultModel = "google/gemini-2.5-flash"
     const rawModel = typeof body?.model === "string" && body.model.length > 0 ? body.model : defaultModel
-    
+
     let requestedModel;
-    if (rawModel.startsWith("google/")) {
-      requestedModel = google(rawModel.replace("google/", ""))
+    if (rawModel.startsWith("google/") || (!rawModel.includes("/") && googleApiKey)) {
+      let modelId = rawModel.replace("google/", "")
+      // Map legacy or selected model IDs to valid active Google models
+      if (modelId === "gemini-1.5-flash" || modelId === "gemini-2.0-flash") modelId = "gemini-2.5-flash"
+      if (modelId === "gemini-1.5-pro" || modelId === "gemini-2.0-pro") modelId = "gemini-2.5-pro"
+      requestedModel = google(modelId)
+    } else if (rawModel.startsWith("openai/") && process.env.OPENAI_API_KEY) {
+      const modelId = rawModel.replace("openai/", "")
+      requestedModel = openai(modelId)
+    } else if (process.env.OPENROUTER_API_KEY) {
+      requestedModel = openrouter(rawModel)
     } else {
-      const modelName = rawModel.replace("openai/", "")
-      requestedModel = openai(modelName)
+      // Default to Google Gemini 2.5 Flash
+      requestedModel = google("gemini-2.5-flash")
     }
 
 
@@ -69,7 +86,25 @@ export async function POST(req: Request) {
       return Response.json({ text: cached.text, cached: true, responseTimeMs: Date.now() - cached.timestamp })
     }
 
-    const knowledgeMatch = userQuery ? findBestAnswer(userQuery) : null
+    // Only use KB match as a strong override if score is very high (exact/near-exact match)
+    // Otherwise let Gemini handle the question with KB as optional context
+    const knowledgeMatchRaw = userQuery ? findBestAnswer(userQuery) : null
+    // Re-score inline: require 80+ (at minimum an exact phrase match) to treat as authoritative
+    const knowledgeMatch = (() => {
+      if (!knowledgeMatchRaw) return null
+      const queryLower = userQuery.toLowerCase()
+      const searchable = (`${knowledgeMatchRaw.question} ${knowledgeMatchRaw.answer} ${knowledgeMatchRaw.keywords.join(" ")}`).toLowerCase()
+      let score = 0
+      if (searchable.includes(queryLower)) score += 80
+      for (const kw of knowledgeMatchRaw.keywords) {
+        if (queryLower.includes(kw.toLowerCase())) score += kw.split(" ").length * 10
+      }
+      // Only treat as strong match if score >= 80 (phrase-level match)
+      return score >= 80 ? knowledgeMatchRaw : null
+    })()
+
+    // For low-confidence matches, just add as supplementary context hint (not override)
+    const knowledgeHint = !knowledgeMatch ? knowledgeMatchRaw : null
 
     let dynamicContext = ""
     if (projectContext) {
@@ -218,14 +253,20 @@ Always respond as a trusted, experienced professional — not as a generic assis
 - Supportive — construction teams are under pressure; be practical and solution-focused
 - Adaptable — adjust technical depth based on the user's apparent role
 
-${dynamicContext}
+    ${dynamicContext}
 
 ${knowledgeMatch
           ? `
-TRAINED ANSWER FOR THIS QUERY:
+TRAINED KNOWLEDGE BASE ANSWER FOR THIS QUERY:
 The user is asking about: "${knowledgeMatch.question}"
-Use this trained response as your primary answer:
+This is a verified, high-confidence answer from the SIID knowledge base. Use it as the foundation but enhance it with your professional expertise:
 ${knowledgeMatch.answer}
+`
+          : knowledgeHint
+          ? `
+RELATED KNOWLEDGE BASE CONTEXT (use as background only — do NOT repeat verbatim):
+Topic: "${knowledgeHint.question}"
+Context: ${knowledgeHint.answer.slice(0, 400)}...
 `
           : ""}
 

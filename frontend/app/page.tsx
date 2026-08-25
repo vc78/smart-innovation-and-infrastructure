@@ -544,14 +544,14 @@ export default function LandingPage() {
       </section>
 
       {/* add progress analytics section before the Features or Vision section for more dynamics */}
-      < section className="py-16 bg-muted" >
+      <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
           <ProgressAnalytics />
         </div>
-      </section >
+      </section>
       {/* ... existing code ... */}
 
-      < section className="py-20 bg-muted" >
+      <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <BudgetEstimator />
@@ -559,7 +559,7 @@ export default function LandingPage() {
             <InsightsSearch />
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 bg-background" >
