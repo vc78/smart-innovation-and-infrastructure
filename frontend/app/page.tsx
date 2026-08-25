@@ -39,6 +39,7 @@ import ImageCarousel from "@/components/image-carousel"
 import VideoCarousel from "@/components/video-carousel"
 import { HeadlineScroller } from "@/components/headline-scroller"
 import { CompanyLogoScroller } from "@/components/company-logo-scroller"
+import { ConstructionRouteMap } from "@/components/construction-route-map"
 import ProgressAnalytics from "@/components/progress-analytics"
 
 import BudgetEstimator from "@/components/budget-estimator"
@@ -679,7 +680,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-
+      {/* Construction Route Map Section (Image 4 Directive) */}
+      <ConstructionRouteMap />
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-background">
