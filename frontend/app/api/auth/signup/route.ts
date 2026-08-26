@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs"
 import dbConnect from "@/lib/mongodb"
 import User from "@/models/User"
 import { signToken, setAuthCookies } from "@/lib/jwt"
+import { getAll, insert } from "@/lib/db"
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       console.warn("MongoDB connection failed in signup, using fallback.")
     }
 
-    // 2. Check if user already exists
+    // 2. Check if user already exists in MongoDB
     let existingUser = null
     if (isDbConnected) {
       try {
@@ -33,75 +34,75 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Fallback check from JSON DB
+    // 3. Fallback check from local JSON DB
     if (!existingUser) {
-      const { getAll } = require("@/lib/db")
       const localUsers = getAll("users")
-      existingUser = localUsers.find((u: any) => u.email.toLowerCase() === lowerEmail)
+      existingUser = localUsers.find((u: any) => u.email?.toLowerCase() === lowerEmail) || null
     }
 
     if (existingUser) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 })
     }
 
-    // 4. Hash password
+    // 4. Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // 5. Create user (MongoDB + JSON fallback)
+    // 5. Create user in MongoDB (if connected)
     let newUser: any = null
     if (isDbConnected) {
-        try {
-            newUser = await User.create({
-                name,
-                email: lowerEmail,
-                password: hashedPassword,
-                role: 'user',
-                status: 'active'
-            })
-        } catch (e) {
-            console.error("MongoDB creation failed in signup:", e)
-        }
+      try {
+        newUser = await User.create({
+          name,
+          email: lowerEmail,
+          password: hashedPassword,
+          role: "user",
+          status: "active",
+        })
+      } catch (e) {
+        console.error("MongoDB creation failed in signup:", e)
+      }
     }
 
-    // Always sync to JSON DB for development resilience
-    const { insert } = require("@/lib/db")
+    // 6. Always sync to local JSON DB as fallback
     const localId = `u${Date.now()}`
     const localUser = {
-        id: newUser?._id?.toString() || localId,
-        name,
-        email: lowerEmail,
-        password: hashedPassword,
-        role: 'user',
-        status: 'active'
+      id: newUser?._id?.toString() || localId,
+      name,
+      email: lowerEmail,
+      password: hashedPassword,
+      role: "user",
+      status: "active",
     }
     insert("users", localUser)
 
-    // Ensure we have a consistent user object for the token
+    // 7. Ensure a consistent user object for token generation
     const userForToken = newUser || localUser
 
-    // 6. Generate token
+    // 8. Generate JWT token
     const token = await signToken({
       userId: (userForToken._id || userForToken.id).toString(),
       email: userForToken.email,
       role: userForToken.role,
     })
 
-    // 7. Set HTTP-only cookie
+    // 9. Set HTTP-only cookie
     await setAuthCookies(token)
 
-    return NextResponse.json({
+    return NextResponse.json(
+      {
         message: "Signup successful",
         access_token: token,
         token_type: "bearer",
         user: {
-            id: (userForToken._id || userForToken.id).toString(),
-            name: userForToken.name,
-            email: userForToken.email,
-            role: userForToken.role,
-            status: userForToken.status
-        }
-    }, { status: 201 })
-
+          id: (userForToken._id || userForToken.id).toString(),
+          name: userForToken.name,
+          email: userForToken.email,
+          role: userForToken.role,
+          status: userForToken.status,
+        },
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     console.error("Signup error:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })

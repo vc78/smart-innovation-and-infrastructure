@@ -63,34 +63,24 @@ export default function SignupPage() {
     }
 
     try {
-      const created = await apiPost<{
-        id: number
-        name: string
-        email: string
-        role: string
-        created_at: string
-      }>("/auth/signup", {
+      // Signup returns the token and user directly — no second login call needed
+      const res = await apiPost<{ access_token: string; token_type: string; user: any }>("/auth/signup", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
       })
 
-      const loginRes = await apiPost<{ access_token: string; token_type: string; user: any }>("/auth/login", {
-        email: formData.email,
-        password: formData.password,
-      })
+      localStorage.setItem("user", JSON.stringify(res.user))
+      localStorage.setItem("token", res.access_token)
+      document.cookie = `userRole=${res.user.role || 'user'}; path=/; max-age=86400`
 
-      localStorage.setItem("user", JSON.stringify(loginRes.user))
-      localStorage.setItem("token", loginRes.access_token)
-      document.cookie = `userRole=${loginRes.user.role || 'user'}; path=/; max-age=86400`
-
-      if (loginRes.user.role === 'admin') {
+      if (res.user.role === 'admin') {
         router.push("/admin")
       } else {
         router.push("/dashboard")
       }
     } catch (err: any) {
-      setError(err?.message || "Signup failed")
+      setError(err?.message || "Signup failed. Please try again.")
     } finally {
       setLoading(false)
     }
