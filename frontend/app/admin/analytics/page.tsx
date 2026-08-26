@@ -3,18 +3,14 @@
 import { useEffect, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
-  BarChart3,
-  Zap,
-  Target,
   Cpu,
-  Database,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
-  History,
-  Download,
   Users,
-  AlertCircle
+  History,
+  AlertCircle,
+  Database,
+  Target,
+  Zap,
+  RefreshCw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,172 +31,183 @@ import {
   Legend,
 } from "recharts"
 
-const COLORS = ["#60a5fa", "#34d399", "#facc15", "#a78bfa", "#f97316"]
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"]
 
-export default function AdminAnalytics() {
+export default function AdminAnalyticsPage() {
   const [analytics, setAnalytics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (token) headers.Authorization = `Bearer ${token}`
-
-        let res = await fetch('/api/backend-proxy/admin/analytics', { credentials: 'include', headers })
-        if (!res.ok) res = await fetch('/api/admin/analytics', { credentials: 'include', headers })
-        if (res.ok) {
-          const data = await res.json()
-          setAnalytics(data)
-        }
-      } catch (err) {
-        console.error("Failed to load admin analytics", err)
-      } finally {
-        setLoading(false)
+  const load = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/admin/analytics")
+      if (res.ok) {
+        const data = await res.json()
+        setAnalytics(data)
       }
+    } catch (err) {
+      console.error("Failed to load admin analytics:", err)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center text-slate-400">Loading analytics...</div>
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center text-slate-400 text-xs">
+        Loading analytics telemetry...
+      </div>
+    )
   }
 
   if (!analytics) {
-    return <div className="min-h-[60vh] flex items-center justify-center text-red-400">Unable to load analytics data.</div>
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center text-slate-400 text-xs">
+        Unable to load analytics data.
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Core <span className="text-blue-500">Analytics</span></h1>
-          <p className="text-slate-400 text-base md:text-lg">Detailed telemetry of neural synthesis and project throughput.</p>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">
+            Analytics & Insights
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Operational usage trends, AI execution counts, and growth metrics
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button variant="outline" className="border-slate-800 bg-slate-900 shadow-xl text-slate-300 flex-1 sm:flex-none">
-            <History className="w-4 h-4 mr-2" /> 24h Log
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white px-8 shadow-lg shadow-blue-500/20 flex-1 sm:flex-none">
-            <Download className="w-4 h-4 mr-2" /> Export JSON
-          </Button>
-        </div>
-      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><Cpu className="w-5 h-5 text-blue-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">AI Predictions</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.ai_predictions || 0}</h3>
-          <p className="text-xs text-slate-500">Total model predictions</p>
+        <Button
+          onClick={load}
+          variant="outline"
+          size="sm"
+          className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs h-9"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400 font-medium">AI Predictions</span>
+            <Cpu className="w-4 h-4 text-blue-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{analytics.ai_predictions || 0}</div>
+          <p className="text-[11px] text-slate-500 mt-0.5">Total model calls</p>
         </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><Users className="w-5 h-5 text-green-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">New Users (24h)</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.new_users_24h || 0}</h3>
-          <p className="text-xs text-slate-500">New registrations in last day</p>
+
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400 font-medium">New Users (24h)</span>
+            <Users className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{analytics.new_users_24h || 0}</div>
+          <p className="text-[11px] text-slate-500 mt-0.5">New signups</p>
         </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><History className="w-5 h-5 text-cyan-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">Login Success (24h)</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.login_success_24h || 0}</h3>
-          <p className="text-xs text-slate-500">Successful login events</p>
+
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400 font-medium">Auth Success</span>
+            <History className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{analytics.login_success_24h || 0}</div>
+          <p className="text-[11px] text-slate-500 mt-0.5">Active sessions</p>
         </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><AlertCircle className="w-5 h-5 text-red-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">Failed Logins (24h)</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.login_fail_24h || 0}</h3>
-          <p className="text-xs text-slate-500">Invalid credential attempts</p>
-        </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><Database className="w-5 h-5 text-purple-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">Material Estimator</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.ai_feature_usage?.["Material Estimator"] || 0}</h3>
-          <p className="text-xs text-slate-500">Call count</p>
-        </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><Target className="w-5 h-5 text-yellow-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">Vastu Analyzer</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.ai_feature_usage?.["Vastu Analyzer"] || 0}</h3>
-          <p className="text-xs text-slate-500">Call count</p>
-        </Card>
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <div className="flex items-center gap-3 mb-4"><Zap className="w-5 h-5 text-emerald-400" /><p className="text-xs text-slate-400 uppercase tracking-widest">Layout Generator</p></div>
-          <h3 className="text-3xl font-bold text-white">{analytics.ai_feature_usage?.["Layout Generator"] || 0}</h3>
-          <p className="text-xs text-slate-500">Call count</p>
+
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400 font-medium">Auth Failures</span>
+            <AlertCircle className="w-4 h-4 text-rose-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{analytics.login_fail_24h || 0}</div>
+          <p className="text-[11px] text-slate-500 mt-0.5">Invalid attempts</p>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <CardHeader><CardTitle className="text-white">Projects Created (12 months)</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.projects_per_month || []} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" allowDecimals={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155' }} />
-                <Legend />
-                <Bar dataKey="value" fill="#60a5fa" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
+      {/* Feature Breakdown */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center flex-shrink-0">
+            <Database className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Material Estimations</div>
+            <div className="text-lg font-bold text-white">
+              {analytics.ai_feature_usage?.["Material Estimator"] || 0}
+            </div>
+          </div>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <CardHeader><CardTitle className="text-white">Project Type Distribution</CardTitle></CardHeader>
-          <CardContent className="h-72">
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center flex-shrink-0">
+            <Target className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Vastu Evaluations</div>
+            <div className="text-lg font-bold text-white">
+              {analytics.ai_feature_usage?.["Vastu Analyzer"] || 0}
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-slate-900/80 border-slate-800/80 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Layout Generations</div>
+            <div className="text-lg font-bold text-white">
+              {analytics.ai_feature_usage?.["Layout Generator"] || 0}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-slate-900/80 border-slate-800/80 p-5 rounded-xl">
+          <h3 className="text-sm font-semibold text-white mb-4">Project Creations (12 Months)</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.projects_per_month || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="month" stroke="#64748b" textAnchor="end" tick={{ fontSize: 11 }} />
+                <YAxis stroke="#64748b" allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", fontSize: "12px" }} />
+                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Projects" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="bg-slate-900/80 border-slate-800/80 p-5 rounded-xl">
+          <h3 className="text-sm font-semibold text-white mb-4">Project Types Distribution</h3>
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={analytics.project_types || []} dataKey="value" nameKey="type" cx="50%" cy="50%" outerRadius={90} label>
-                  {(analytics.project_types || []).map((entry: any, index: number) => (
+                <Pie data={analytics.project_types || []} dataKey="value" nameKey="type" cx="50%" cy="50%" outerRadius={80} label={{ fill: "#94a3b8", fontSize: 11 }}>
+                  {(analytics.project_types || []).map((_: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155' }} />
-                <Legend verticalAlign="bottom" />
+                <Tooltip contentStyle={{ backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", fontSize: "12px" }} />
+                <Legend wrapperStyle={{ fontSize: "11px", color: "#94a3b8" }} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <CardHeader><CardTitle className="text-white">User Growth</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={analytics.user_growth || []} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="label" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" allowDecimals={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155' }} />
-                <Legend />
-                <Line type="monotone" dataKey="count" stroke="#34d399" strokeWidth={3} dot={{ r: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-800 p-6">
-          <CardHeader><CardTitle className="text-white">AI Usage Trend</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.ai_usage_trend || []} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.9} />
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" allowDecimals={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155' }} />
-                <Area type="monotone" dataKey="value" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorUsage)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>
   )
 }
-

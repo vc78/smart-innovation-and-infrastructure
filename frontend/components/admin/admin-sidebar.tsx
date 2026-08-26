@@ -1,96 +1,146 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Users,
-  FolderOpen,
-  BarChart3,
-  Settings,
-  ShieldCheck,
-  TrendingUp,
-  FileText,
-  Bell,
+  FolderKanban,
+  BarChart2,
   Clock,
-  LogOut
+  FileSpreadsheet,
+  Settings,
+  LogOut,
+  Sparkles,
+  ExternalLink,
+  ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logout } from "@/lib/auth"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-export function AdminSidebar({ isOpen = false }: { isOpen?: boolean }) {
+export function AdminSidebar({
+  isOpen = false,
+  onClose,
+}: {
+  isOpen?: boolean
+  onClose?: () => void
+}) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const links = [
-    { href: "/admin", label: "Overview", icon: LayoutDashboard },
-    { href: "/admin/users", label: "User Control", icon: Users },
-    { href: "/admin/projects", label: "Project Fleet", icon: FolderOpen },
-    { href: "/admin/analytics", label: "Core Analytics", icon: BarChart3 },
+  const navigation = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/projects", label: "Projects", icon: FolderKanban },
+    { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/admin/logs", label: "Activity Logs", icon: Clock },
-    { href: "/admin/reports", label: "System Reports", icon: FileText },
-    { href: "/admin/settings", label: "Terminal Settings", icon: Settings },
+    { href: "/admin/reports", label: "Reports", icon: FileSpreadsheet },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ]
 
+  const handleLinkClick = () => {
+    if (onClose) onClose()
+  }
+
   return (
-    <aside className={cn(
-      "fixed left-0 top-0 h-full w-64 bg-slate-950 text-slate-200 border-r border-slate-800 flex flex-col z-40 transition-transform duration-300 lg:translate-x-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
-    )}>
-      <div className="p-6 border-b border-slate-800">
-        <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
+    <aside
+      className={cn(
+        "fixed left-0 top-0 h-full w-64 bg-slate-950 text-slate-100 border-r border-slate-800/80 flex flex-col z-40 transition-transform duration-300 ease-in-out lg:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
+      {/* Brand Header */}
+      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
+        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-white">SIID <span className="text-blue-500">ADMIN</span></span>
+          <div>
+            <div className="font-bold text-sm text-white tracking-tight flex items-center gap-1.5">
+              <span>SIID</span>
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
+                Admin
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-medium">Management Console</div>
+          </div>
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest px-4 mb-4">Command Center</div>
-        {links.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href
+      {/* Main Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+          Platform Overview
+        </div>
+
+        {navigation.map((item) => {
+          const Icon = item.icon
+          const isActive = pathname === item.href
+
           return (
-            <Link key={link.href} href={link.href}>
-              <button
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${isActive
-                    ? "bg-blue-600/10 text-blue-400 border border-blue-600/20"
-                    : "hover:bg-slate-900 text-slate-400 hover:text-slate-200"
-                  }`}
+            <Link key={item.href} href={item.href} onClick={handleLinkClick}>
+              <div
+                className={cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer select-none",
+                  isActive
+                    ? "bg-primary text-white shadow-sm font-bold"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/80"
+                )}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "text-blue-500" : "group-hover:text-slate-200"}`} />
-                <span className="text-sm font-medium">{link.label}</span>
-              </button>
+                <div className="flex items-center gap-2.5">
+                  <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-slate-400")} />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 opacity-80" />}
+              </div>
             </Link>
           )
         })}
+
+        <div className="pt-4 mt-4 border-t border-slate-800/60">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+            Quick Actions
+          </div>
+          <Link href="/" target="_blank" className="block">
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-900/80 transition-colors">
+              <span className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5" />
+                Live Website
+              </span>
+            </div>
+          </Link>
+        </div>
       </nav>
 
-      <div className="p-4 border-t border-slate-800 space-y-4">
-        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-          <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-slate-500">
-            <TrendingUp className="w-3 h-3" />
-            SYSTEM LOAD
+      {/* Footer Profile & Logout */}
+      <div className="p-3 border-t border-slate-800/80 bg-slate-950">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/60 mb-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-primary/20 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
+              A
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-white truncate">Administrator</div>
+              <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Online
+              </div>
+            </div>
           </div>
-          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 w-1/3" />
-          </div>
-          <div className="mt-2 text-[10px] text-slate-600 text-center">v2.4.0-production</div>
         </div>
 
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-red-400/5"
+          size="sm"
           onClick={async () => {
             await logout()
             router.push("/login")
           }}
+          className="w-full justify-start text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 h-8"
         >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Exit Terminal</span>
+          <LogOut className="w-3.5 h-3.5 mr-2" />
+          Sign Out
         </Button>
       </div>
     </aside>

@@ -6,18 +6,12 @@ import {
   Users,
   Search,
   UserPlus,
-  Shield,
-  Mail,
-  Calendar,
   Lock,
   Unlock,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
   RefreshCw,
-  FolderGit2,
-  SlidersHorizontal,
   X,
+  SlidersHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -120,7 +114,7 @@ export default function UserManagementPage() {
   }
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to permanently delete user "${userName}"?`)) {
+    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
       return
     }
     setActionLoading(userId)
@@ -188,83 +182,51 @@ export default function UserManagementPage() {
     return matchesSearch && matchesRole && matchesStatus
   })
 
-  const totalAdmins = users.filter((u) => u.role === "admin").length
-  const totalContractors = users.filter((u) => u.role === "contractor").length
-  const totalActive = users.filter((u) => u.status === "active").length
-
   return (
-    <div className="space-y-8">
-      {/* Top Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-            User Identity & Access <span className="text-blue-500">Control</span>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">
+            User Management
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Real-time live monitoring and management of all verified platform operators
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Manage authenticated platform accounts, roles, and security permissions
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             onClick={fetchUsers}
             variant="outline"
             size="sm"
-            className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white"
+            className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs h-9"
           >
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button
             onClick={() => setModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm px-4 shadow-lg shadow-blue-500/20"
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs h-9 px-3.5 shadow-sm"
           >
-            <UserPlus className="w-4 h-4 mr-1.5" /> Add User
+            <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+            Add User
           </Button>
         </div>
-      </header>
-
-      {/* KPI Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 bg-slate-900/90 border-slate-800 rounded-xl">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-            Total Users
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-white">{users.length}</div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/90 border-slate-800 rounded-xl">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
-            Active Accounts
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-400">{totalActive}</div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/90 border-slate-800 rounded-xl">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-rose-400 mb-1">
-            Administrators
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-rose-400">{totalAdmins}</div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/90 border-slate-800 rounded-xl">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-purple-400 mb-1">
-            Contractors
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-purple-400">{totalContractors}</div>
-        </Card>
       </div>
 
-      {/* Search & Filter Bar */}
-      <Card className="p-4 sm:p-6 bg-slate-900/90 border-slate-800 rounded-xl space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
+      {/* Main Table Card */}
+      <Card className="p-4 sm:p-6 bg-slate-900/80 border-slate-800/80 rounded-xl space-y-4">
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name, email, or role..."
-              className="pl-10 bg-slate-950 border-slate-800 text-white h-11 rounded-lg text-xs sm:text-sm"
+              className="pl-9 bg-slate-950 border-slate-800 text-white h-9 rounded-lg text-xs"
             />
           </div>
 
@@ -272,64 +234,64 @@ export default function UserManagementPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 text-slate-300 text-xs sm:text-sm rounded-lg px-3 py-2 outline-none"
+              className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-2.5 h-9 outline-none"
             >
               <option value="all">All Roles</option>
-              <option value="admin">Admins</option>
-              <option value="user">Standard Users</option>
+              <option value="admin">Administrators</option>
+              <option value="user">Users</option>
               <option value="contractor">Contractors</option>
             </select>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 text-slate-300 text-xs sm:text-sm rounded-lg px-3 py-2 outline-none"
+              className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-2.5 h-9 outline-none"
             >
               <option value="all">All Statuses</option>
-              <option value="active">Active Only</option>
-              <option value="suspended">Suspended Only</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
             </select>
           </div>
         </div>
 
-        {/* Real Users Table */}
+        {/* Clean Users Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <thead className="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               <tr>
-                <th className="pb-3 px-3">User & Email</th>
+                <th className="pb-3 px-3">User</th>
                 <th className="pb-3 px-3">Role</th>
                 <th className="pb-3 px-3">Status</th>
                 <th className="pb-3 px-3">Projects</th>
-                <th className="pb-3 px-3">Joined Date</th>
+                <th className="pb-3 px-3">Created</th>
                 <th className="pb-3 px-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-xs sm:text-sm">
+            <tbody className="divide-y divide-slate-800/60 text-xs">
               {filteredUsers.map((user) => {
                 const isWorking = actionLoading === user.id
 
                 return (
-                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                  <tr key={user.id} className="hover:bg-slate-800/20 transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
                           {user.name[0]?.toUpperCase() || "U"}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-bold text-white truncate">{user.name}</div>
-                          <div className="text-slate-400 text-xs truncate">{user.email}</div>
+                          <div className="font-semibold text-white truncate">{user.name}</div>
+                          <div className="text-slate-400 text-[11px] truncate">{user.email}</div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Role Badge + Selector */}
-                    <td className="py-3.5 px-3">
+                    {/* Role Selector */}
+                    <td className="py-3 px-3">
                       <select
                         value={user.role}
                         onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                         disabled={isWorking}
-                        className={`text-xs font-bold px-2 py-1 rounded border bg-slate-950 cursor-pointer outline-none ${
+                        className={`text-xs font-semibold px-2 py-0.5 rounded border bg-slate-950 cursor-pointer outline-none ${
                           user.role === "admin"
                             ? "text-rose-400 border-rose-500/30"
                             : user.role === "contractor"
@@ -343,12 +305,12 @@ export default function UserManagementPage() {
                       </select>
                     </td>
 
-                    {/* Status Badge */}
-                    <td className="py-3.5 px-3">
+                    {/* Status Pill */}
+                    <td className="py-3 px-3">
                       <button
                         onClick={() => handleUpdateStatus(user.id, user.status)}
                         disabled={isWorking}
-                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border transition-all ${
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
                           user.status === "active"
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
                             : "bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20"
@@ -363,23 +325,23 @@ export default function UserManagementPage() {
                       </button>
                     </td>
 
-                    <td className="py-3.5 px-3 font-mono font-bold text-slate-300">
+                    <td className="py-3 px-3 font-mono font-medium text-slate-300">
                       {user.projects_count || 0}
                     </td>
 
-                    <td className="py-3.5 px-3 text-slate-400 text-xs">
+                    <td className="py-3 px-3 text-slate-400 text-[11px]">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : "Active"}
                     </td>
 
-                    {/* Action Buttons */}
-                    <td className="py-3.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    {/* Actions */}
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => handleUpdateStatus(user.id, user.status)}
                           disabled={isWorking}
-                          className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="h-7 w-7 text-slate-400 hover:text-white"
                           title={user.status === "active" ? "Suspend user" : "Activate user"}
                         >
                           {user.status === "active" ? (
@@ -393,7 +355,7 @@ export default function UserManagementPage() {
                           variant="ghost"
                           onClick={() => handleDeleteUser(user.id, user.name)}
                           disabled={isWorking}
-                          className="h-8 w-8 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
+                          className="h-7 w-7 text-slate-400 hover:text-rose-400"
                           title="Delete user"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -407,78 +369,74 @@ export default function UserManagementPage() {
           </table>
 
           {filteredUsers.length === 0 && !loading && (
-            <div className="py-8 text-center text-slate-500 text-xs sm:text-sm">
-              No matching user records found.
-            </div>
+            <div className="py-8 text-center text-slate-500 text-xs">No matching users found</div>
           )}
         </div>
       </Card>
 
-      {/* Modal: Add New Network User */}
+      {/* Add User Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 p-6 rounded-2xl relative shadow-2xl">
+          <Card className="w-full max-w-md bg-slate-900 border-slate-800 p-5 sm:p-6 rounded-xl relative shadow-2xl">
             <button
               onClick={() => setModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-lg font-bold text-white mb-1">Add Network User</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Create a new authenticated identity with custom role assignments.
-            </p>
+            <h3 className="text-base font-bold text-white mb-1">Add Platform User</h3>
+            <p className="text-xs text-slate-400 mb-4">Create a new authenticated account</p>
 
             {modalError && (
-              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs mb-4">
+              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs mb-3">
                 {modalError}
               </div>
             )}
 
-            <form onSubmit={handleCreateUser} className="space-y-3.5">
+            <form onSubmit={handleCreateUser} className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Full Name</label>
+                <label className="text-xs font-medium text-slate-300 block mb-1">Full Name</label>
                 <Input
                   value={modalFormData.name}
                   onChange={(e) => setModalFormData({ ...modalFormData, name: e.target.value })}
                   placeholder="e.g. Rahul Sharma"
-                  className="bg-slate-950 border-slate-800 text-white h-10 text-xs"
+                  className="bg-slate-950 border-slate-800 text-white h-9 text-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Email Address</label>
+                <label className="text-xs font-medium text-slate-300 block mb-1">Email Address</label>
                 <Input
                   type="email"
                   value={modalFormData.email}
                   onChange={(e) => setModalFormData({ ...modalFormData, email: e.target.value })}
-                  placeholder="name@company.com"
-                  className="bg-slate-950 border-slate-800 text-white h-10 text-xs"
+                  placeholder="name@example.com"
+                  className="bg-slate-950 border-slate-800 text-white h-9 text-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Password</label>
+                <label className="text-xs font-medium text-slate-300 block mb-1">Password</label>
                 <Input
                   type="password"
                   value={modalFormData.password}
                   onChange={(e) => setModalFormData({ ...modalFormData, password: e.target.value })}
                   placeholder="••••••••"
-                  className="bg-slate-950 border-slate-800 text-white h-10 text-xs"
+                  className="bg-slate-950 border-slate-800 text-white h-9 text-xs"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Role</label>
+                  <label className="text-xs font-medium text-slate-300 block mb-1">Role</label>
                   <select
                     value={modalFormData.role}
                     onChange={(e) => setModalFormData({ ...modalFormData, role: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-2.5 h-10 outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-2.5 h-9 outline-none"
                   >
                     <option value="user">User</option>
                     <option value="admin">Administrator</option>
@@ -487,11 +445,11 @@ export default function UserManagementPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Status</label>
+                  <label className="text-xs font-medium text-slate-300 block mb-1">Status</label>
                   <select
                     value={modalFormData.status}
                     onChange={(e) => setModalFormData({ ...modalFormData, status: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-2.5 h-10 outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-2.5 h-9 outline-none"
                   >
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
@@ -499,17 +457,17 @@ export default function UserManagementPage() {
                 </div>
               </div>
 
-              <div className="pt-3 flex gap-2">
+              <div className="pt-2 flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 border-slate-800 bg-slate-950 text-slate-300"
+                  className="flex-1 border-slate-800 bg-slate-950 text-slate-300 text-xs h-9"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold">
-                  Create User
+                <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-9">
+                  Create Account
                 </Button>
               </div>
             </form>
