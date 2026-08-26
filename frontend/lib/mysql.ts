@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { getAll, insert } from "@/lib/db";
 
 let mysql: any;
 try {
@@ -7,19 +8,11 @@ try {
     mysql = require('mysql2/promise');
 } catch (e) {
     // If native driver is missing, we use our local JSON DB fallback
-    // This removes the "Module not found" blocker and makes the app work instantly.
 }
 
 let pool: any;
 
-/**
- * Senior Developer Note: 
- * We use a Polymorphic approach here. If MySQL is configured via environment variables 
- * AND the driver is installed, we use it. Otherwise, we transparently fallback to 
- * the JSON file database (lib/db.ts) to ensure zero-downtime development.
- */
 export const getDb = async () => {
-    // Advanced Performance: If in dev and no DB config, skip connection attempt immediately
     if (process.env.NODE_ENV === 'development' && !process.env.DATABASE_URL && !process.env.DB_HOST) {
         return null;
     }
@@ -36,7 +29,7 @@ export const getDb = async () => {
                     waitForConnections: true,
                     connectionLimit: 5,
                     queueLimit: 0,
-                    connectTimeout: 2000 // Very fast timeout
+                    connectTimeout: 2000
                 };
                 
                 pool = mysql.createPool(config);
@@ -62,15 +55,13 @@ export async function query<T>(sql: string, params: any[] = []): Promise<T[]> {
     }
 
     // 2. Fallback to lib/db.ts (JSON File Emulation)
-    // We parse basic SQL patterns to provide an identical interface
-    const { getAll, insert } = require("@/lib/db");
     const table = sql.match(/FROM\s+(\w+)/i)?.[1] || "users";
     const data = getAll(table);
 
     // Handle SELECT * FROM users WHERE email = ?
     if (sql.includes("WHERE email = ?")) {
         const email = (params[0] || "").toLowerCase();
-        return data.filter((u: any) => u.email.toLowerCase() === email) as T[];
+        return data.filter((u: any) => u.email?.toLowerCase() === email) as T[];
     }
 
     // Handle SELECT id, ... FROM users WHERE id = ?

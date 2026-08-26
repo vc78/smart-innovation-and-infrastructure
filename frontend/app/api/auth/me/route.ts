@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import dbConnect from "@/lib/mongodb"
 import User from "@/models/User"
 import { verifyToken } from "@/lib/jwt"
+import { getAll } from "@/lib/db"
 
 export async function GET(req: Request) {
   try {
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
       const conn = await dbConnect()
       if (conn) isDbConnected = true
     } catch (e) {
-      // Catch real connection failures silently to rely on the fallback
+      // Silently fall back to JSON DB
     }
 
     if (isDbConnected) {
@@ -40,9 +41,8 @@ export async function GET(req: Request) {
 
     // 2. Fallback to lib/db.ts (local JSON file)
     if (!user) {
-      const { getAll } = require("@/lib/db")
       const localUsers = getAll("users")
-      user = localUsers.find((u: any) => (u._id || u.id).toString() === userId.toString())
+      user = localUsers.find((u: any) => (u._id || u.id)?.toString() === userId?.toString())
     }
     
     if (!user) {
@@ -52,10 +52,10 @@ export async function GET(req: Request) {
     // Return sanitized user object
     const sanitizedUser = {
       id: (user._id || user.id).toString(),
-      name: user.name,
+      name: user.name || "User",
       email: user.email,
-      role: user.role,
-      status: user.status,
+      role: user.role || "user",
+      status: user.status || "active",
       settings_data: user.settings_data || "{}"
     }
 

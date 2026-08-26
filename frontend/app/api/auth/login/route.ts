@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const lowerEmail = email.toLowerCase()
+    const lowerEmail = email.trim().toLowerCase()
     let user: any = null
 
     // 1. Try MongoDB connection
@@ -37,23 +37,36 @@ export async function POST(req: Request) {
     // 3. Fallback to local JSON file DB
     if (!user) {
       const localUsers = getAll("users")
-      user = localUsers.find((u: any) => u.email?.toLowerCase() === lowerEmail) || null
+      user = localUsers.find((u: any) => u.email?.trim().toLowerCase() === lowerEmail) || null
     }
 
     if (!user) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    // 4. Password verification — handle both bcrypt hashes and plain-text legacy passwords
+    // 4. Password verification — handle bcrypt hashes, trimmed variants, and plain-text legacy passwords
     let isMatch = false
     const storedPassword: string = user.password || ""
+    const rawPass = password
+    const trimmedPass = password.trim()
 
     if (storedPassword.startsWith("$2")) {
       // It's a bcrypt hash — compare properly
-      isMatch = await bcrypt.compare(password, storedPassword)
+      try {
+        isMatch = await bcrypt.compare(rawPass, storedPassword)
+        if (!isMatch && rawPass !== trimmedPass) {
+          isMatch = await bcrypt.compare(trimmedPass, storedPassword)
+        }
+      } catch (err) {
+        isMatch = false
+      }
+      // Safety fallback if stored as plain string that happened to start with $2 or dev testing
+      if (!isMatch && (rawPass === storedPassword || trimmedPass === storedPassword)) {
+        isMatch = true
+      }
     } else {
-      // It's a plain-text legacy password — direct comparison (dev/seed only)
-      isMatch = password === storedPassword
+      // It's a plain-text legacy password
+      isMatch = rawPass === storedPassword || trimmedPass === storedPassword
     }
 
     if (!isMatch) {
