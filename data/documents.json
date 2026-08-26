@@ -1,0 +1,46 @@
+[
+  {
+    "id": "a3f9827b-2762-46bd-9dc8-6fc7428978e9",
+    "name": "Material-Estimate-My Project-12_3_2026 (1) (1).pdf",
+    "type": "design",
+    "format": "pdf",
+    "status": "draft",
+    "date": "2026-04-01",
+    "size": "0.01 MB",
+    "version": "v1.0",
+    "uploadedBy": "VENKAT  CHOWDARY BODDULURI",
+    "url": "/uploads/Material-Estimate-My Project-12_3_2026 (1) (1).pdf",
+    "mlAnalysis": {
+      "summary": "Digital Audit Analysis (Layout-LM v3): This document is a high-precision pdf file. Non-blueprint procedural document analyzed via standard NLP Pipeline.",
+      "confidenceScore": 96.8,
+      "risks": [
+        "Visual audit non-applicable. Recommend manual compliance check."
+      ],
+      "extractedSpecs": [],
+      "detectedZones": [],
+      "docClass": "General Document"
+    }
+  },
+  {
+    "id": "023e2fc1-e0be-46fb-95d9-3f8ab9017502",
+    "name": "Material-Estimate-My Project-1_4_2026.pdf",
+    "type": "design",
+    "format": "pdf",
+    "status": "draft",
+    "date": "2026-04-01",
+    "size": "0.01 MB",
+    "version": "v1.0",
+    "uploadedBy": "VENKAT  CHOWDARY BODDULURI",
+    "url": "/uploads/Material-Estimate-My Project-1_4_2026.pdf",
+    "mlAnalysis": {
+      "summary": "Digital Audit Analysis (Layout-LM v3): This document is a high-precision pdf file. Non-blueprint procedural document analyzed via standard NLP Pipeline.",
+      "confidenceScore": 95.8,
+      "risks": [
+        "Visual audit non-applicable. Recommend manual compliance check."
+      ],
+      "extractedSpecs": [],
+      "detectedZones": [],
+      "docClass": "General Document"
+    }
+  }
+]

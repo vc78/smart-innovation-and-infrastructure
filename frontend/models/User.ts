@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema(
       required: [true, "Please provide an email"],
       unique: true,
       lowercase: true,
+      trim: true,
     },
     password: {
       type: String,
@@ -23,13 +24,13 @@ const UserSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "pending"],
+      enum: ["active", "inactive", "pending", "suspended", "blocked"],
       default: "active",
     },
     settings_data: {
-        type: String,
-        default: "{}"
-    }
+      type: String,
+      default: "{}",
+    },
   },
   { timestamps: true }
 )

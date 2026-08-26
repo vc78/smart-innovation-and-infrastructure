@@ -11,7 +11,8 @@ import {
   Trash2,
   RefreshCw,
   X,
-  SlidersHorizontal,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,7 +36,10 @@ export default function UserManagementPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null)
+
   const [modalFormData, setModalFormData] = useState({
     name: "",
     email: "",
@@ -44,6 +48,11 @@ export default function UserManagementPage() {
     status: "active",
   })
   const [modalError, setModalError] = useState("")
+
+  const showNotification = (type: "success" | "error", message: string) => {
+    setNotification({ type, message })
+    setTimeout(() => setNotification(null), 4000)
+  }
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -81,9 +90,13 @@ export default function UserManagementPage() {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, status: newStatus as any } : u))
         )
+        showNotification("success", `User status updated to ${newStatus}`)
+      } else {
+        showNotification("error", "Failed to update status")
       }
     } catch (err) {
       console.error("Failed to update status:", err)
+      showNotification("error", "An error occurred while updating status")
     } finally {
       setActionLoading(null)
     }
@@ -105,16 +118,20 @@ export default function UserManagementPage() {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, role: newRole as any } : u))
         )
+        showNotification("success", `User role updated to ${newRole}`)
+      } else {
+        showNotification("error", "Failed to update role")
       }
     } catch (err) {
       console.error("Failed to update role:", err)
+      showNotification("error", "An error occurred while updating role")
     } finally {
       setActionLoading(null)
     }
   }
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
+    if (!confirm(`Are you sure you want to permanently delete user "${userName}"?`)) {
       return
     }
     setActionLoading(userId)
@@ -126,9 +143,13 @@ export default function UserManagementPage() {
       })
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u.id !== userId))
+        showNotification("success", `User "${userName}" deleted`)
+      } else {
+        showNotification("error", "Failed to delete user")
       }
     } catch (err) {
       console.error("Failed to delete user:", err)
+      showNotification("error", "An error occurred while deleting user")
     } finally {
       setActionLoading(null)
     }
@@ -142,6 +163,7 @@ export default function UserManagementPage() {
       return
     }
 
+    setIsCreating(true)
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
@@ -152,7 +174,7 @@ export default function UserManagementPage() {
         }),
       })
       const data = await res.json()
-      if (res.ok) {
+      if (res.ok && data.success) {
         setModalOpen(false)
         setModalFormData({
           name: "",
@@ -161,12 +183,15 @@ export default function UserManagementPage() {
           role: "user",
           status: "active",
         })
+        showNotification("success", `User "${modalFormData.name}" created successfully`)
         fetchUsers()
       } else {
         setModalError(data.error || "Failed to create user")
       }
     } catch (err: any) {
       setModalError(err.message || "Failed to create user")
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -184,6 +209,24 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* Toast Notification Banner */}
+      {notification && (
+        <div
+          className={`p-3 rounded-lg flex items-center gap-2 text-xs font-semibold border animate-in fade-in duration-200 ${
+            notification.type === "success"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+          }`}
+        >
+          {notification.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          )}
+          <span>{notification.message}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -206,7 +249,10 @@ export default function UserManagementPage() {
             Refresh
           </Button>
           <Button
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setModalError("")
+              setModalOpen(true)
+            }}
             size="sm"
             className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs h-9 px-3.5 shadow-sm"
           >
@@ -389,8 +435,9 @@ export default function UserManagementPage() {
             <p className="text-xs text-slate-400 mb-4">Create a new authenticated account</p>
 
             {modalError && (
-              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs mb-3">
-                {modalError}
+              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs mb-3 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{modalError}</span>
               </div>
             )}
 
@@ -462,12 +509,17 @@ export default function UserManagementPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setModalOpen(false)}
+                  disabled={isCreating}
                   className="flex-1 border-slate-800 bg-slate-950 text-slate-300 text-xs h-9"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-9">
-                  Create Account
+                <Button
+                  type="submit"
+                  disabled={isCreating}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-9"
+                >
+                  {isCreating ? "Creating..." : "Create Account"}
                 </Button>
               </div>
             </form>
