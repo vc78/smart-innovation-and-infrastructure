@@ -13,25 +13,22 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  X,
-  Film,
-  CheckCircle2,
-  Layers,
   ArrowRight,
+  Film,
+  Layers,
   Activity,
-  SlidersHorizontal,
-  LayoutGrid,
+  CheckCircle2,
   Tv,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-export interface VideoItem {
+export interface VideoShowcaseItem {
   id: number
   title: string
   subtitle: string
-  category: string
+  category: "Architecture" | "Structural" | "Interior" | "Exterior" | "Virtual Tour"
   description: string
   duration: string
   fps: string
@@ -43,16 +40,16 @@ export interface VideoItem {
   actionLabel: string
 }
 
-const SHOWCASE_VIDEOS: VideoItem[] = [
+const CINEMA_VIDEOS: VideoShowcaseItem[] = [
   {
     id: 1,
-    title: "AI Architectural Design & Floor Plan Engine",
-    subtitle: "Parametric BIM Layout Generation",
-    category: "AI Design Automation",
-    description: "SIID's neural design engine analyzes site geometry to generate 2D floor plans, 3D structural models, and room dimension specs in seconds.",
+    title: "Parametric AI Architectural & BIM Generator",
+    subtitle: "Automated Floor Plans & Dimension Calculation",
+    category: "Architecture",
+    description: "SIID neural engine synthesizes 2D floor plans, 3D structural models, and room dimension specs in real time with automated municipal setback compliance.",
     duration: "1:45",
     fps: "60 FPS",
-    resolution: "4K Render",
+    resolution: "4K BIM",
     src: "/images/stu.mp4",
     poster: "/images/ai-floor-plan-generation-architectural.jpg",
     tags: ["Parametric Layout", "Auto BIM", "Vastu Compliant", "Instant BOQ"],
@@ -62,9 +59,9 @@ const SHOWCASE_VIDEOS: VideoItem[] = [
   {
     id: 2,
     title: "Structural Steel & Load Vector Simulation",
-    category: "Structural Engineering",
-    subtitle: "Real-Time Seismic Stress Analysis",
-    description: "Interactive load distribution modeling, reinforced column placement, and automated rebar/concrete quantity calculations.",
+    subtitle: "Real-Time Seismic Stress & FEA Analysis",
+    category: "Structural",
+    description: "Interactive load distribution modeling, reinforced column placement, and automated rebar and concrete volume calculations for Seismic Zone IV.",
     duration: "2:10",
     fps: "60 FPS",
     resolution: "3D CAD Vector",
@@ -77,9 +74,9 @@ const SHOWCASE_VIDEOS: VideoItem[] = [
   {
     id: 3,
     title: "Smart Interior Walkthrough & Lighting Dynamics",
-    category: "3D Interior Architecture",
     subtitle: "Double-Height Loft Spatial Ergonomics",
-    description: "Immersive 3D interior spatial organization with automated MEP conduit routing, ambient recessed LED strips, and acoustic clearance.",
+    category: "Interior",
+    description: "Immersive 3D interior spatial organization with automated MEP conduit routing, ambient recessed LED strips, and acoustic clearance verification.",
     duration: "2:30",
     fps: "60 FPS",
     resolution: "HDR Spatial",
@@ -92,478 +89,398 @@ const SHOWCASE_VIDEOS: VideoItem[] = [
   {
     id: 4,
     title: "Modern Villa Exterior Architecture Render",
-    category: "Exterior Facade Renders",
-    subtitle: "Cantilevered Glass & Solar Heat Gain",
+    subtitle: "Cantilevered Glass & Solar Heat Gain Optimization",
+    category: "Exterior",
     description: "High-performance modern villa facade rendering with daylight orientation analysis, solar gain thermal optimization, and luxury landscaping.",
     duration: "3:05",
     fps: "60 FPS",
     resolution: "Ray-Traced",
     src: "/images/ext1.mp4",
-    poster: "/images/modern-villa-project.jpg",
-    tags: ["Glass Facade", "Solar Heat Gain", "3D Landscape", "Thermal Audit"],
-    link: "/dashboard",
+    poster: "/images/modern-villa-exterior-facade-rendering.jpg",
+    tags: ["Thermal Modeling", "Solar Gain < 0.25", "Facade Lighting", "Granite Cladding"],
+    link: "/3d-generator",
     actionLabel: "View Exterior Model",
   },
   {
     id: 5,
-    title: "First-Person Virtual Spatial Walkthrough",
-    category: "Virtual Tour Engine",
-    subtitle: "Interactive Architectural Audit",
-    description: "First-person interactive spatial audit allowing architects, structural engineers, and clients to validate clearance heights and room proportions.",
+    title: "First-Person Interactive Virtual Walkthrough",
+    subtitle: "Real-Time Spatial Navigation & Clearance Check",
+    category: "Virtual Tour",
+    description: "Experience your future residence from the inside out with photorealistic textures, customizable lighting temperatures, and furniture scale inspection.",
     duration: "1:55",
     fps: "60 FPS",
-    resolution: "Interactive BIM",
-    src: "/images/ve1.mp4",
-    poster: "/images/hero_architectural_render.png",
-    tags: ["First-Person Tour", "Clearance Check", "Client Review", "Real-Time Walk"],
-    link: "/3d-generator",
-    actionLabel: "Start Virtual Walk",
-  },
-  {
-    id: 6,
-    title: "High-Performance Parametric Building Showcase",
-    category: "Smart Cities & Commercial",
-    subtitle: "Commercial Structural & Mechanical BIM",
-    description: "Multi-story commercial framing, HVAC duct routing, three-phase power distribution, and mechanical system layout generated automatically.",
-    duration: "2:40",
-    fps: "60 FPS",
-    resolution: "Smart BIM",
+    resolution: "Immersive WebGL",
     src: "/images/p1.mp4",
-    poster: "/images/hero_architectural_background.png",
-    tags: ["Commercial BIM", "HVAC Routing", "Smart City Ready", "MEP Integration"],
-    link: "/projects/create",
-    actionLabel: "Launch Commercial BIM",
+    poster: "/images/interactive-3d-virtual-walkthrough-tour.jpg",
+    tags: ["Real-Time Walkthrough", "Furniture Clearance", "60 FPS WebGL", "Zero Lag"],
+    link: "/3d-generator",
+    actionLabel: "Start Virtual Tour",
   },
 ]
 
+const CATEGORIES = ["Architecture", "Structural", "Interior", "Exterior", "Virtual Tour"] as const
+
 export default function VideoCarousel() {
-  const [activeVideo, setActiveVideo] = useState<VideoItem>(SHOWCASE_VIDEOS[0])
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
-  const [progress, setProgress] = useState(0)
-  const [currentTimeStr, setCurrentTimeStr] = useState("0:00")
-  const [modalVideo, setModalVideo] = useState<VideoItem | null>(null)
-  const [viewMode, setViewMode] = useState<"split" | "grid">("split")
+  const [activeVideoId, setActiveVideoId] = useState<number>(1)
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [isMuted, setIsMuted] = useState<boolean>(true)
+  const [progress, setProgress] = useState<number>(0)
+  const [duration, setDuration] = useState<number>(0)
+  const [currentTime, setCurrentTime] = useState<number>(0)
+  const [isVideoLoading, setIsVideoLoading] = useState<boolean>(false)
+  const [hasStartedPlaying, setHasStartedPlaying] = useState<boolean>(false)
 
-  const mainVideoRef = useRef<HTMLVideoElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const thumbnailScrollRef = useRef<HTMLDivElement | null>(null)
 
-  // Sync active video changes
+  const activeVideo = CINEMA_VIDEOS.find((v) => v.id === activeVideoId) || CINEMA_VIDEOS[0]
+
+  // Reset video state when switching active video
   useEffect(() => {
-    setIsPlaying(true)
+    setIsPlaying(false)
     setProgress(0)
-    setCurrentTimeStr("0:00")
+    setCurrentTime(0)
+    setHasStartedPlaying(false)
 
-    if (mainVideoRef.current) {
-      mainVideoRef.current.currentTime = 0
-      mainVideoRef.current.muted = isMuted
-      mainVideoRef.current.play().catch(() => {
-        setIsPlaying(false)
-      })
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0
+      videoRef.current.pause()
     }
-  }, [activeVideo])
+  }, [activeVideoId])
 
-  const handleTogglePlay = () => {
-    const vid = mainVideoRef.current
-    if (!vid) return
+  const togglePlay = () => {
+    if (!videoRef.current) return
 
     if (isPlaying) {
-      vid.pause()
+      videoRef.current.pause()
       setIsPlaying(false)
     } else {
-      vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+      setIsVideoLoading(true)
+      setHasStartedPlaying(true)
+      videoRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true)
+          setIsVideoLoading(false)
+        })
+        .catch((err) => {
+          console.warn("Video playback error:", err)
+          setIsPlaying(false)
+          setIsVideoLoading(false)
+        })
     }
   }
 
-  const handleToggleMute = () => {
-    const vid = mainVideoRef.current
-    const nextState = !isMuted
-    setIsMuted(nextState)
-    if (vid) {
-      vid.muted = nextState
-    }
+  const toggleMute = () => {
+    if (!videoRef.current) return
+    const newMuted = !isMuted
+    videoRef.current.muted = newMuted
+    setIsMuted(newMuted)
   }
 
   const handleTimeUpdate = () => {
-    const vid = mainVideoRef.current
-    if (!vid || !vid.duration) return
-
-    const current = vid.currentTime
-    const total = vid.duration
+    if (!videoRef.current) return
+    const current = videoRef.current.currentTime
+    const total = videoRef.current.duration || 1
+    setCurrentTime(current)
+    setDuration(total)
     setProgress((current / total) * 100)
-
-    const mins = Math.floor(current / 60)
-    const secs = Math.floor(current % 60)
-    setCurrentTimeStr(`${mins}:${secs < 10 ? "0" : ""}${secs}`)
   }
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const vid = mainVideoRef.current
-    if (!vid || !vid.duration) return
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const percent = Math.max(0, Math.min(1, clickX / rect.width))
+    const seekTime = percent * (videoRef.current.duration || 0)
+    videoRef.current.currentTime = seekTime
+    setProgress(percent * 100)
+  }
 
-    const newTime = (parseFloat(e.target.value) / 100) * vid.duration
-    vid.currentTime = newTime
-    setProgress(parseFloat(e.target.value))
+  const handleFullscreen = () => {
+    if (!videoRef.current) return
+    if (videoRef.current.requestFullscreen) {
+      videoRef.current.requestFullscreen()
+    }
+  }
+
+  const selectNextVideo = () => {
+    const currentIndex = CINEMA_VIDEOS.findIndex((v) => v.id === activeVideoId)
+    const nextIndex = (currentIndex + 1) % CINEMA_VIDEOS.length
+    setActiveVideoId(CINEMA_VIDEOS[nextIndex].id)
+  }
+
+  const selectPrevVideo = () => {
+    const currentIndex = CINEMA_VIDEOS.findIndex((v) => v.id === activeVideoId)
+    const prevIndex = (currentIndex - 1 + CINEMA_VIDEOS.length) % CINEMA_VIDEOS.length
+    setActiveVideoId(CINEMA_VIDEOS[prevIndex].id)
+  }
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${m}:${s < 10 ? "0" : ""}${s}`
   }
 
   return (
-    <div className="w-full relative">
-      {/* High-End Header Bar with Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+    <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
+      {/* Section Sub-Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold mb-3 shadow-sm">
-            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-            Side-by-Side Cinema Engine
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold mb-2">
+            <Tv className="w-3.5 h-3.5" />
+            SIID Cinema Engine
           </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-primary">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
             Immersive Video Showcase
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-2xl leading-relaxed">
-            Experience 3D architectural renders, AI floor plan generation, and structural simulations side-by-side with real-time specs.
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Experience 3D architectural renders, structural FEA stress simulations, and MEP routing
           </p>
         </div>
 
-        {/* View Mode Toggle Switch */}
-        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border/80 shadow-inner flex-shrink-0">
-          <button
-            onClick={() => setViewMode("split")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              viewMode === "split"
-                ? "bg-primary text-white shadow-lg shadow-primary/25"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+        {/* Previous / Next Arrow Navigation Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={selectPrevVideo}
+            className="h-9 w-9 rounded-full border-border/60 hover:bg-muted"
+            aria-label="Previous video"
           >
-            <Tv className="w-4 h-4" />
-            Split Cinema Stage
-          </button>
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              viewMode === "grid"
-                ? "bg-primary text-white shadow-lg shadow-primary/25"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={selectNextVideo}
+            className="h-9 w-9 rounded-full border-border/60 hover:bg-muted"
+            aria-label="Next video"
           >
-            <LayoutGrid className="w-4 h-4" />
-            Multi-Card Grid
-          </button>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      {/* ================================================================================== */}
-      {/* MODE 1: SIDE-BY-SIDE DUAL CINEMA STAGE */}
-      {/* ================================================================================== */}
-      {viewMode === "split" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* LEFT SIDE: Active Cinema Player (7 Columns) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="relative rounded-3xl overflow-hidden border border-white/20 dark:border-border/80 bg-slate-950 shadow-2xl group">
-              {/* Main Cinema Video Aspect Frame */}
-              <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
-                <video
-                  ref={mainVideoRef}
-                  src={activeVideo.src}
-                  poster={activeVideo.poster}
-                  playsInline
-                  loop
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={() => setIsPlaying(false)}
-                  className="w-full h-full object-cover"
-                />
+      {/* Category / Stage Selector Chips */}
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {CATEGORIES.map((cat) => {
+          const matchingVideo = CINEMA_VIDEOS.find((v) => v.category === cat)
+          const isSelected = activeVideo.category === cat
 
-                {/* Ambient Top Telemetry Badge */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20 pointer-events-none">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-slate-950/80 text-white backdrop-blur-md border border-white/20 px-3 py-1 font-bold text-xs shadow-lg">
-                      <Activity className="w-3.5 h-3.5 mr-1 text-emerald-400 inline animate-pulse" />
-                      {activeVideo.fps}
-                    </Badge>
-                    <Badge variant="outline" className="bg-slate-950/80 text-white/90 border-white/20 text-xs font-semibold">
-                      {activeVideo.resolution}
-                    </Badge>
-                  </div>
-                  <Badge className="bg-primary/90 text-white font-bold text-xs px-3 py-1 shadow-lg">
-                    {activeVideo.category}
-                  </Badge>
-                </div>
-
-                {/* Big Floating Center Play Overlay when Paused */}
-                {!isPlaying && (
-                  <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center z-20">
-                    <button
-                      onClick={handleTogglePlay}
-                      className="w-20 h-20 rounded-full bg-primary text-white flex items-center justify-center shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 group-hover:bg-emerald-500"
-                    >
-                      <Play className="w-9 h-9 fill-current ml-1" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Bottom Glassmorphic Control Bar */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex flex-col gap-2">
-                  {/* Seek Bar Scrubber */}
-                  <div className="w-full flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-white/80 w-8">{currentTimeStr}</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={progress}
-                      onChange={handleSeek}
-                      className="flex-1 h-1.5 bg-white/20 accent-primary rounded-lg cursor-pointer hover:h-2 transition-all"
-                    />
-                    <span className="text-[11px] font-mono text-white/60 w-8">{activeVideo.duration}</span>
-                  </div>
-
-                  {/* Action Control Buttons */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={handleTogglePlay}
-                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/15 flex items-center justify-center transition-all"
-                      >
-                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-                      </button>
-
-                      <button
-                        onClick={handleToggleMute}
-                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/15 flex items-center justify-center transition-all"
-                      >
-                        {isMuted ? (
-                          <VolumeX className="w-5 h-5 text-rose-400" />
-                        ) : (
-                          <Volume2 className="w-5 h-5 text-emerald-400" />
-                        )}
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => setModalVideo(activeVideo)}
-                      className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white text-white hover:text-slate-950 backdrop-blur-md border border-white/20 font-bold text-xs flex items-center gap-2 transition-all"
-                    >
-                      <Maximize2 className="w-3.5 h-3.5" />
-                      Fullscreen Cinema
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Active Video Meta Details Panel */}
-            <Card className="p-6 md:p-8 border-border/80 bg-card/90 backdrop-blur-xl shadow-xl space-y-4">
-              <div className="space-y-1">
-                <div className="text-xs font-bold text-primary tracking-widest uppercase">{activeVideo.subtitle}</div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-                  {activeVideo.title}
-                </h3>
-              </div>
-
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                {activeVideo.description}
-              </p>
-
-              {/* Tag Badges */}
-              <div className="flex flex-wrap gap-2 pt-2">
-                {activeVideo.tags.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="text-xs px-3 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 font-semibold"
-                  >
-                    ✓ {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Quick Launch CTA */}
-              <div className="pt-4 border-t border-border/60 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">Ready to explore this parametric feature?</span>
-                <Link href={activeVideo.link}>
-                  <Button className="bg-primary hover:bg-primary/90 text-white font-bold shadow-lg group">
-                    {activeVideo.actionLabel}
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          </div>
-
-          {/* RIGHT SIDE: Side Video Queue Selector (5 Columns) */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Film className="w-4 h-4 text-primary" />
-                Architectural Video Queue ({SHOWCASE_VIDEOS.length})
-              </span>
-              <span className="text-xs text-primary font-semibold">Click to Switch Stage</span>
-            </div>
-
-            <div className="space-y-3.5 max-h-[700px] overflow-y-auto pr-1 custom-scrollbar">
-              {SHOWCASE_VIDEOS.map((video) => {
-                const isActive = activeVideo.id === video.id
-
-                return (
-                  <motion.div
-                    key={video.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveVideo(video)}
-                    className={`cursor-pointer rounded-2xl overflow-hidden border p-3.5 transition-all duration-300 flex items-center gap-4 ${
-                      isActive
-                        ? "border-primary bg-primary/10 shadow-xl shadow-primary/10 ring-2 ring-primary/40"
-                        : "border-border/60 bg-card/60 hover:bg-card hover:border-primary/40"
-                    }`}
-                  >
-                    {/* Thumbnail Image Container */}
-                    <div className="relative w-28 h-20 sm:w-32 sm:h-20 rounded-xl overflow-hidden bg-slate-950 flex-shrink-0 border border-white/10">
-                      <img src={video.poster} alt={video.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-slate-950/30 group-hover:bg-transparent transition-colors" />
-
-                      {/* Play State / Now Playing Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {isActive ? (
-                          <span className="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-extrabold tracking-wider shadow-md animate-pulse">
-                            PLAYING
-                          </span>
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-slate-950/75 text-white flex items-center justify-center backdrop-blur-sm border border-white/20">
-                            <Play className="w-4 h-4 fill-current ml-0.5" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="absolute bottom-1 right-1 bg-slate-950/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
-                        {video.duration}
-                      </div>
-                    </div>
-
-                    {/* Meta Information */}
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <Badge variant="outline" className="text-[10px] px-2 py-0 border-primary/30 text-primary font-semibold">
-                        {video.category}
-                      </Badge>
-                      <h4 className={`text-sm font-bold line-clamp-1 transition-colors ${isActive ? "text-primary" : "text-foreground"}`}>
-                        {video.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{video.subtitle}</p>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* ================================================================================== */
-        /* MODE 2: MULTI-CARD GRID SHOWCASE */
-        /* ================================================================================== */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SHOWCASE_VIDEOS.map((video) => (
-            <Card
-              key={video.id}
-              className="p-0 overflow-hidden border border-border/60 bg-card/80 backdrop-blur-xl hover:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-2xl flex flex-col group"
+          return (
+            <button
+              key={cat}
+              onClick={() => matchingVideo && setActiveVideoId(matchingVideo.id)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap min-h-[36px] flex items-center gap-1.5 touch-manipulation ${
+                isSelected
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40"
+              }`}
             >
-              <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
-                <img
-                  src={video.poster}
-                  alt={video.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/20 transition-colors" />
+              <span>{cat}</span>
+            </button>
+          )
+        })}
+      </div>
 
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                  <Badge className="bg-slate-950/80 text-white backdrop-blur-md border border-white/20 text-[11px] font-bold">
-                    {video.category}
-                  </Badge>
-                  <Badge variant="outline" className="bg-slate-950/80 text-white/90 border-white/20 text-[11px]">
-                    {video.duration}
-                  </Badge>
+      {/* Main Cinema Player Card */}
+      <Card className="p-0 overflow-hidden border border-border/60 bg-slate-950 text-white rounded-xl md:rounded-2xl shadow-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+          {/* Video Player Box (7 Cols on Desktop) */}
+          <div className="lg:col-span-7 relative aspect-[16/9] sm:aspect-[16/9] bg-black flex items-center justify-center overflow-hidden group">
+            {/* Lazy Loaded HTML5 Video Element */}
+            <video
+              ref={videoRef}
+              key={activeVideo.src}
+              src={hasStartedPlaying ? activeVideo.src : undefined}
+              poster={activeVideo.poster}
+              preload="none"
+              muted={isMuted}
+              playsInline
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={() => setIsPlaying(false)}
+              className="w-full h-full object-cover"
+            />
+
+            {/* Poster Play Overlay if not playing */}
+            {!isPlaying && (
+              <div
+                onClick={togglePlay}
+                className="absolute inset-0 bg-slate-950/40 hover:bg-slate-950/20 backdrop-blur-[1px] transition-all flex items-center justify-center cursor-pointer z-20"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/90 hover:bg-primary text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                  <Play className="w-6 h-6 sm:w-7 sm:h-7 ml-1 fill-white" />
+                </div>
+              </div>
+            )}
+
+            {/* Top Specs Badges */}
+            <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-20">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
+                  {activeVideo.fps}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-blue-400 border border-blue-500/30">
+                  {activeVideo.resolution}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-white/90 border border-white/20">
+                {activeVideo.category}
+              </span>
+            </div>
+
+            {/* Bottom Controls Bar */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-20 flex flex-col gap-2">
+              {/* Seek Bar */}
+              <div
+                onClick={handleSeek}
+                className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer overflow-hidden relative hover:h-2 transition-all"
+              >
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-100"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+
+              {/* Controls Row */}
+              <div className="flex items-center justify-between text-xs text-white/90">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={togglePlay}
+                    className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                    aria-label={isPlaying ? "Pause video" : "Play video"}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                  </button>
+
+                  <button
+                    onClick={toggleMute}
+                    className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                    aria-label={isMuted ? "Unmute video" : "Mute video"}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+
+                  <span className="text-[11px] font-mono text-white/70">
+                    {formatTime(currentTime)} / {formatTime(duration || 0) || activeVideo.duration}
+                  </span>
                 </div>
 
-                <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      setActiveVideo(video)
-                      setViewMode("split")
-                    }}
-                    className="w-14 h-14 rounded-full bg-primary/90 hover:bg-primary text-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all"
+                    onClick={handleFullscreen}
+                    className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                    aria-label="Fullscreen"
                   >
-                    <Play className="w-6 h-6 fill-current ml-1" />
+                    <Maximize2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <h3 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                    {video.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mt-1">
-                    {video.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {video.tags.slice(0, 3).map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/40 font-medium"
-                    >
-                      ✓ {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Lightbox Video Modal Popup */}
-      <AnimatePresence>
-        {modalVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-8"
-            onClick={() => setModalVideo(null)}
-          >
-            <div
-              className="relative max-w-5xl w-full bg-slate-900 rounded-3xl overflow-hidden border border-white/20 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setModalVideo(null)}
-                className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-slate-950/80 text-white flex items-center justify-center hover:bg-rose-600 transition-colors border border-white/20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="relative aspect-video w-full bg-black">
-                <video
-                  src={modalVideo.src}
-                  poster={modalVideo.poster}
-                  controls
-                  autoPlay
-                  className="w-full h-full object-contain"
-                />
+          {/* Video Metadata & CTA Box (5 Cols on Desktop) */}
+          <div className="lg:col-span-5 p-5 sm:p-6 md:p-7 flex flex-col justify-between bg-card text-foreground border-t lg:border-t-0 lg:border-l border-border/50">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-primary border-primary/30 bg-primary/5">
+                  {activeVideo.subtitle}
+                </Badge>
               </div>
 
-              <div className="p-6 md:p-8 space-y-3 bg-slate-900">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-primary text-white font-semibold">{modalVideo.category}</Badge>
-                  <Badge variant="outline" className="text-white border-white/20">
-                    {modalVideo.resolution} • {modalVideo.fps}
-                  </Badge>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white">{modalVideo.title}</h3>
-                <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-                  {modalVideo.description}
-                </p>
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-2 leading-snug">
+                {activeVideo.title}
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
+                {activeVideo.description}
+              </p>
+
+              {/* Tags Grid */}
+              <div className="flex flex-wrap gap-1.5 mb-5">
+                {activeVideo.tags.map((tag, tIdx) => (
+                  <span
+                    key={tIdx}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/40"
+                  >
+                    <CheckCircle2 className="w-3 h-3 text-primary inline" />
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Action CTA */}
+            <div className="pt-3 border-t border-border/40">
+              <Link href={activeVideo.link} className="w-full">
+                <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm py-2.5 h-auto min-h-[42px] justify-between shadow-sm">
+                  <span>{activeVideo.actionLabel}</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Horizontal Thumbnail Carousel Below Player */}
+      <div
+        ref={thumbnailScrollRef}
+        className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory"
+      >
+        {CINEMA_VIDEOS.map((video) => {
+          const isSelected = video.id === activeVideoId
+
+          return (
+            <div
+              key={video.id}
+              onClick={() => setActiveVideoId(video.id)}
+              className={`flex-shrink-0 w-[180px] sm:w-[210px] cursor-pointer snap-start rounded-xl overflow-hidden border transition-all duration-200 touch-manipulation group ${
+                isSelected
+                  ? "border-primary ring-2 ring-primary/30 shadow-md scale-[1.02]"
+                  : "border-border/60 hover:border-primary/40 bg-card"
+              }`}
+            >
+              {/* Thumbnail Image Container */}
+              <div className="relative aspect-[16/9] w-full bg-slate-950 overflow-hidden">
+                <img
+                  src={video.poster}
+                  alt={video.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors" />
+
+                {/* Duration Badge */}
+                <div className="absolute bottom-1.5 right-1.5">
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/80 text-white">
+                    {video.duration}
+                  </span>
+                </div>
+
+                {/* Active Indicator Pill */}
+                {isSelected && (
+                  <div className="absolute top-1.5 left-1.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary text-white shadow-sm">
+                      Playing
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail Title */}
+              <div className="p-2.5 bg-card">
+                <div className="text-[10px] font-bold text-primary truncate mb-0.5">
+                  {video.category}
+                </div>
+                <div className="text-xs font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                  {video.title}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

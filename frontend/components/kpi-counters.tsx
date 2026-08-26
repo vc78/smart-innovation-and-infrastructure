@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { KPI_COUNTER_ITEMS } from "@/lib/stats-config"
+import { Award, Users, ShieldCheck, ThumbsUp } from "lucide-react"
 
 type Kpi = { label: string; value: number; suffix?: string; prefix?: string }
+
+const ICONS = [Award, Users, ShieldCheck, ThumbsUp]
 
 function useInViewOnce<T extends HTMLElement>() {
   const ref = useRef<T | null>(null)
@@ -13,6 +16,14 @@ function useInViewOnce<T extends HTMLElement>() {
   useEffect(() => {
     if (!ref.current) return
     const el = ref.current
+    
+    // Check if prefers-reduced-motion is active
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (prefersReducedMotion) {
+      setInView(true)
+      return
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -23,18 +34,12 @@ function useInViewOnce<T extends HTMLElement>() {
           }
         }
       },
-      { threshold: 0.05 }
+      { threshold: 0.1 }
     )
     io.observe(el)
-    
-    // Fallback timer to ensure numbers animate even if IO event is delayed/missed
-    const fallbackTimer = setTimeout(() => {
-      setInView(true)
-    }, 150)
 
     return () => {
       io.disconnect()
-      clearTimeout(fallbackTimer)
     }
   }, [])
 
@@ -55,7 +60,7 @@ export default function KpiCounters({
     if (!inView) return
 
     let animationFrame: number
-    const duration = 1800
+    const duration = 1400 // 1400ms duration with easing
     const startTime = performance.now()
 
     const animateCount = (currentTime: number) => {
@@ -66,6 +71,8 @@ export default function KpiCounters({
 
       if (timeFraction < 1) {
         animationFrame = requestAnimationFrame(animateCount)
+      } else {
+        setProgress(1) // strictly fixed final state
       }
     }
 
@@ -74,37 +81,38 @@ export default function KpiCounters({
   }, [inView])
 
   return (
-    <div className="relative py-12" ref={ref}>
-      <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
-      <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
+    <div className="relative py-4 md:py-8" ref={ref}>
+      {/* Subtle background ambient lights */}
+      <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-primary/10 rounded-full blur-[70px] -translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-accent/10 rounded-full blur-[70px] -translate-y-1/2 pointer-events-none" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto relative z-10 px-4">
+      {/* 2x2 Compact Grid on Mobile, 4-Col on Desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto relative z-10">
         {items.map((k, i) => {
-          // If inView has not fired yet, show current base value rather than 0
-          const currentVal = inView ? Math.floor(k.value * progress) : k.value
+          const currentVal = inView ? Math.floor(k.value * progress) : 0
+          const Icon = ICONS[i % ICONS.length]
 
           return (
             <div
               key={i}
               className={cn(
-                "relative group flex flex-col items-center text-center p-6 md:p-8 rounded-2xl",
-                "bg-background/40 backdrop-blur-sm border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]",
-                "transition-all duration-500 ease-out hover:-translate-y-3 hover:bg-background/80 hover:shadow-xl hover:border-primary/20",
-                "opacity-100 translate-y-0"
+                "relative group flex flex-col items-center justify-center text-center p-3.5 sm:p-5 md:p-6 rounded-xl md:rounded-2xl",
+                "bg-card/70 backdrop-blur-md border border-border/60 shadow-sm",
+                "transition-all duration-300 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5"
               )}
-              style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10">
-                <div className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600 dark:to-blue-400 mb-3 tabular-nums tracking-tight filter drop-shadow-sm">
-                  {k.prefix}
-                  {currentVal}
-                  {k.suffix}
-                </div>
-                <div className="text-sm md:text-base font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-300">
-                  {k.label}
-                </div>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform">
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-accent tabular-nums tracking-tight mb-0.5 sm:mb-1">
+                {k.prefix}
+                {currentVal}
+                {k.suffix}
+              </div>
+
+              <div className="text-xs sm:text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors line-clamp-1">
+                {k.label}
               </div>
             </div>
           )
