@@ -4,6 +4,7 @@ import dbConnect from "@/lib/mongodb"
 import User from "@/models/User"
 import { signToken, setAuthCookies } from "@/lib/jwt"
 import { getAll } from "@/lib/db"
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(req: Request) {
   try {
@@ -41,6 +42,13 @@ export async function POST(req: Request) {
     }
 
     if (!user) {
+      logActivity({
+        user_id: "unknown",
+        user_email: lowerEmail,
+        action: `Failed Login Attempt: Email not found (${lowerEmail})`,
+        category: "auth",
+        details: "User does not exist in database",
+      })
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
@@ -51,7 +59,6 @@ export async function POST(req: Request) {
     const trimmedPass = password.trim()
 
     if (storedPassword.startsWith("$2")) {
-      // It's a bcrypt hash — compare properly
       try {
         isMatch = await bcrypt.compare(rawPass, storedPassword)
         if (!isMatch && rawPass !== trimmedPass) {
@@ -60,20 +67,38 @@ export async function POST(req: Request) {
       } catch (err) {
         isMatch = false
       }
-      // Safety fallback if stored as plain string that happened to start with $2 or dev testing
       if (!isMatch && (rawPass === storedPassword || trimmedPass === storedPassword)) {
         isMatch = true
       }
     } else {
-      // It's a plain-text legacy password
       isMatch = rawPass === storedPassword || trimmedPass === storedPassword
     }
 
     if (!isMatch) {
+      logActivity({
+        user_id: (user._id || user.id).toString(),
+        user_name: user.name,
+        user_email: user.email,
+        action: `Failed Login Attempt: Invalid password for ${user.email}`,
+        category: "auth",
+        details: "Password hash verification failed",
+      })
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    // 5. Generate JWT token (use _id or id)
+    if (user.status === "blocked" || user.status === "suspended") {
+      logActivity({
+        user_id: (user._id || user.id).toString(),
+        user_name: user.name,
+        user_email: user.email,
+        action: `Blocked User Login Attempt: ${user.email}`,
+        category: "auth",
+        details: "Account is suspended/blocked",
+      })
+      return NextResponse.json({ error: "Account is suspended. Please contact admin." }, { status: 403 })
+    }
+
+    // 5. Generate JWT token
     const token = await signToken({
       userId: (user._id || user.id).toString(),
       email: user.email,
@@ -83,7 +108,16 @@ export async function POST(req: Request) {
     // 6. Set HTTP-only cookie
     await setAuthCookies(token)
 
-    // 7. Return sanitized user object
+    // 7. Log successful login
+    logActivity({
+      user_id: (user._id || user.id).toString(),
+      user_name: user.name,
+      user_email: user.email,
+      action: `User Login: ${user.name} (${user.role || 'user'})`,
+      category: "auth",
+      details: `Successful authenticated session started as ${user.role || 'user'}`,
+    })
+
     const sanitizedUser = {
       id: (user._id || user.id).toString(),
       name: user.name || "User",

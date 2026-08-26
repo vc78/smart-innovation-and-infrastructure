@@ -4,16 +4,18 @@ import dbConnect from "@/lib/mongodb"
 import User from "@/models/User"
 import { signToken, setAuthCookies } from "@/lib/jwt"
 import { getAll, insert } from "@/lib/db"
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json()
+    const { name, email, password, role = "user" } = await req.json()
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const lowerEmail = email.toLowerCase()
+    const lowerEmail = email.trim().toLowerCase()
+    const cleanName = name.trim()
 
     // 1. Try MongoDB connection
     let isDbConnected = false
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
     // 3. Fallback check from local JSON DB
     if (!existingUser) {
       const localUsers = getAll("users")
-      existingUser = localUsers.find((u: any) => u.email?.toLowerCase() === lowerEmail) || null
+      existingUser = localUsers.find((u: any) => u.email?.trim().toLowerCase() === lowerEmail) || null
     }
 
     if (existingUser) {
@@ -45,17 +47,17 @@ export async function POST(req: Request) {
     }
 
     // 4. Hash password with bcrypt
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password.trim(), 12)
 
     // 5. Create user in MongoDB (if connected)
     let newUser: any = null
     if (isDbConnected) {
       try {
         newUser = await User.create({
-          name,
+          name: cleanName,
           email: lowerEmail,
           password: hashedPassword,
-          role: "user",
+          role,
           status: "active",
         })
       } catch (e) {
@@ -64,29 +66,40 @@ export async function POST(req: Request) {
     }
 
     // 6. Always sync to local JSON DB as fallback
-    const localId = `u${Date.now()}`
+    const localId = `u_${Date.now()}`
     const localUser = {
       id: newUser?._id?.toString() || localId,
-      name,
+      name: cleanName,
       email: lowerEmail,
       password: hashedPassword,
-      role: "user",
+      role,
       status: "active",
+      created_at: new Date().toISOString(),
     }
     insert("users", localUser)
 
-    // 7. Ensure a consistent user object for token generation
     const userForToken = newUser || localUser
+    const finalUserId = (userForToken._id || userForToken.id).toString()
 
-    // 8. Generate JWT token
+    // 7. Generate JWT token
     const token = await signToken({
-      userId: (userForToken._id || userForToken.id).toString(),
+      userId: finalUserId,
       email: userForToken.email,
       role: userForToken.role,
     })
 
-    // 9. Set HTTP-only cookie
+    // 8. Set HTTP-only cookie
     await setAuthCookies(token)
+
+    // 9. Log activity
+    logActivity({
+      user_id: finalUserId,
+      user_name: cleanName,
+      user_email: lowerEmail,
+      action: `New User Registration: ${cleanName} (${lowerEmail})`,
+      category: "auth",
+      details: `New account created with role ${role}`,
+    })
 
     return NextResponse.json(
       {
@@ -94,7 +107,7 @@ export async function POST(req: Request) {
         access_token: token,
         token_type: "bearer",
         user: {
-          id: (userForToken._id || userForToken.id).toString(),
+          id: finalUserId,
           name: userForToken.name,
           email: userForToken.email,
           role: userForToken.role,
