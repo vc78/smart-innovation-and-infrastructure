@@ -11,13 +11,13 @@ import {
   FileSpreadsheet,
   Settings,
   LogOut,
-  Sparkles,
   ExternalLink,
   ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logout } from "@/lib/auth"
 import { cn } from "@/lib/utils"
+import { BrandLogo } from "@/components/brand-logo"
 
 export function AdminSidebar({
   isOpen = false,
@@ -51,21 +51,14 @@ export function AdminSidebar({
       )}
     >
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="font-bold text-sm text-white tracking-tight flex items-center gap-1.5">
-              <span>SIID</span>
-              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
-                Admin
-              </span>
-            </div>
-            <div className="text-[11px] text-slate-400 font-medium">Management Console</div>
-          </div>
+      <div className="px-4 py-4 border-b border-slate-800/80">
+        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-2 group">
+          <BrandLogo size="sm" className="transition-transform duration-200 group-hover:scale-105" />
+          <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/25 flex-shrink-0">
+            Admin
+          </span>
         </Link>
+        <p className="text-[10px] text-slate-500 mt-1.5 pl-0.5 tracking-wide">Management Console</p>
       </div>
 
       {/* Main Navigation */}

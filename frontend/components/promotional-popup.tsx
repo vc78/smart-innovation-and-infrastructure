@@ -4,35 +4,8 @@ import React, { useState, useEffect, useRef } from "react"
 import { X, Play, Pause, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { BrandLogo } from "@/components/brand-logo"
 
-// SIID Logo Component
-function SIIDLogo({ className = "w-12 h-12" }: { className?: string }) {
-    return (
-        <svg
-            viewBox="0 0 200 200"
-            className={cn(className, "drop-shadow-md")}
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <circle cx="100" cy="100" r="95" stroke="#4a9b7e" strokeWidth="2" />
-            <g transform="translate(70, 50)">
-                <rect x="0" y="10" width="60" height="50" fill="none" stroke="#2d5a6d" strokeWidth="1.5" />
-                <rect x="8" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="22" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="36" y="15" width="10" height="8" fill="#2d5a6d" />
-                <rect x="8" y="30" width="10" height="8" fill="#2d5a6d" />
-                <rect x="22" y="30" width="10" height="8" fill="#2d5a6d" />
-                <rect x="36" y="30" width="10" height="8" fill="#2d5a6d" />
-                <path d="M 0 10 L 30 0 L 60 10" fill="none" stroke="#2d5a6d" strokeWidth="1.5" />
-            </g>
-            <ellipse cx="100" cy="100" rx="55" ry="25" fill="none" stroke="#4a9b7e" strokeWidth="2" />
-            <rect x="50" y="130" width="100" height="20" fill="#4a9b7e" rx="3" />
-            <text x="100" y="143" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                SINCE 2025
-            </text>
-        </svg>
-    )
-}
 
 // Video Card Component
 function VideoCard({ videoPath, index }: { videoPath: string; index: number }) {

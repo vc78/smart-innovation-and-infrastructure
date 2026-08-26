@@ -59,14 +59,11 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 sm:px-4 md:px-6 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0">
-          <div className="h-8 sm:h-10 md:h-12 w-auto">
-            <BrandLogo
-              className="h-full w-auto transition-transform duration-300 hover:scale-105"
-              width="100"
-              height="32"
-            />
-          </div>
+        <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
+          <BrandLogo
+            size="md"
+            className="transition-transform duration-300 hover:scale-105"
+          />
         </Link>
 
         {/* Desktop Navigation */}
